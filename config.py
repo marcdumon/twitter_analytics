@@ -3,19 +3,20 @@
 # Twitter_Scraping - config.py
 # md
 # --------------------------------------------------------------------------------------------------------
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 DATABASE = 'twitter_database'
 
 # TWITTER SETTINGS
 SCRAPE_TWITTER = True
 DATA_TYPES = {'tweets': False, 'profiles': True}
-BEGIN_DATE = str(datetime.today() - timedelta(days=2))
-END_DATE = str(datetime.today())
-# BEGIN_DATE = str(datetime(2012, 1, 1))
-# END_DATE = str(datetime.now())
-TIME_DELTA = 10
-SCRAPE_ONLY_MISSING_DATES=True
+# BEGIN_DATE = datetime.today() - timedelta(days=2)
+# END_DATE = datetime.today()
+BEGIN_DATE = datetime(2012, 1, 1)
+END_DATE = datetime.today()
+
+TIME_DELTA = 3
+SCRAPE_ONLY_MISSING_DATES = True
 
 SCRAPE_WITH_PROXY = False
 
@@ -49,7 +50,7 @@ USERS_LIST = {
                'KathleenKrekels', 'joslantmeeters', 'MariusMeremans', 'Jnachtergaele', 'lorinparys123', 'FPerdaens', 'axel_ronse', 'StefaanSintobin', 'A_Tavernier', 'KarlVanlouwe',
                'VanMiertPaul', 'manuelavanwerde', 'KatjaVerheyen', 'bjanseeuw', 'PeterBuysrogge', 'KDepoorterMP', 'PeterDeRoover1', 'joydonne', 'MichaelFreilich', 'FriedaGijbels',
                'Yngvild8', 'SanderLoones', 'MetsuKoen', 'RaskinWouter', 'TRoggeman', 'SafaiDarya', 'SpoorenJan', 'anneleen_vb', 'YoleenVanCamp', 'vanderdoncktwim',
-               'valerievanpeel', 'BertWollants'],
+               'valerievanpeel', 'BertWollants', 'JorenVermeersc1'],
 
     'sp_a': ['sp_a', 'TMeeuws', 'kathleendeckx', 'carogennez', 'Turan_Guler', 'kvanbrempt', 'HanneloreGoeman', 'Fouad_Ahidar', 'bertanciaux', 'Yamila_Idrissi', 'SmetPascal',
              'elsedewachter', 'SaidElKhadraoui', 'conner_rousseau', 'kurtdeloor', 'MamaDaktari', 'BrunoTuybens', 'freyabos', 'dirkvdmaelen', 'bartvanmalderen', 'philippedecoene',
@@ -97,3 +98,6 @@ USERS_LIST = {
 
 }
 USERS_LIST = {'xxx': ['daemsgreet']}
+
+TEST_USERNAME = 'daemsgreet'
+# TEST_USERNAME = 'peter_mertens'
