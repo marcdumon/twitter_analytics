@@ -5,9 +5,9 @@
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, date, timedelta
 import pandas as pd
-from business.twitter_scraper import TweetScraper
-from config import USERS_LIST, SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TEST_USERNAME, TIME_DELTA
-from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets
+from business.twitter_scraper import TweetScraper, ProfileScraper
+from config import USERS_LIST, SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TEST_USERNAME, TIME_DELTA, DATA_TYPES
+from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profile
 from tools.logger import logger
 
 
@@ -15,40 +15,52 @@ def scrape_all_users():
     logger.info('=' * 150)
     logger.info('Start scrapping Twitter')
     logger.info('=' * 150)
-    for username in USERS_LIST['xxx']:
+    for username in USERS_LIST['xxx']: # Todo: generalise for all users
         logger.info('-' * 150)
         logger.info(f'Start scraping Twitter for user: {username}')
         logger.info('-' * 150)
-        scrape_periods = calculate_scrape_periods(username)
-        for (b, e) in scrape_periods:
-            tweets_df = scrape_user_tweets(username, b, e)
-            if not tweets_df.empty:
-                logger.info(f'Saving {len(tweets_df)} tweets')
-                save_tweets(tweets_df)
+        if DATA_TYPES['profiles']:
+            logger.info(f'Start scraping profile for user: {username}')
+            profile_df = _scrape_user_profile(username)
+            if not profile_df.empty:
+                logger.info(f'Saving profile')
+                save_profile(profile_df)
+        if DATA_TYPES['tweets']:
+            periods_to_scrape = _determine_scrape_periods(username)
+            for (begin_date, end_date) in periods_to_scrape:
+                logger.info(f'Start scraping tweets for user: {username} starting on {begin_date} and ending on {end_date}')
+                tweets_df = _scrape_user_tweets(username, begin_date, end_date)
+                if not tweets_df.empty:
+                    logger.info(f'Saving {len(tweets_df)} tweets')
+                    save_tweets(tweets_df)
 
 
-def scrape_user_tweets(username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
-    use_proxy = SCRAPE_WITH_PROXY
-    logger.info(f'Start scraping tweetsfor user: {username} starting on {begin_date} and ending on {end_date}')
+def _scrape_user_profile(username):
+    profile_scraper = ProfileScraper(username)
+    profile_df = profile_scraper.execute_scraping()
+    return profile_df
+
+
+def _scrape_user_tweets(username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
     tweet_scraper = TweetScraper(username, begin_date, end_date)
     tweets_df = tweet_scraper.execute_scraping()
     return tweets_df
 
 
-def calculate_scrape_periods(username):
+def _determine_scrape_periods(username):
     # no need to scrape before join_date
     join_date = get_join_date(username)
     begin_date, end_date = max(BEGIN_DATE, join_date), min(END_DATE, datetime.today())
     # no need to scrape same dates again
     if SCRAPE_ONLY_MISSING_DATES:
-        scrape_periods = get_periods_without_min_tweets(username, begin_date=begin_date, end_date=end_date, min_tweets=1)
+        scrape_periods = _get_periods_without_min_tweets(username, begin_date=begin_date, end_date=end_date, min_tweets=1)
     else:
         scrape_periods = [(begin_date, end_date)]
-    scrape_periods = split_periods(scrape_periods)
+    scrape_periods = _split_periods(scrape_periods)
     return scrape_periods
 
 
-def get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1):
+def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1):
     """
     Gets all the dates when 'username' has 'min_tweets' nr of tweets stored in the database.
     Returns a list of tuples with begin and end date of the period when the 'username' has less or equal amounts of tweets as 'min_tweets' stored in the database.
@@ -69,7 +81,7 @@ def get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1)
     return missing_tweets_periods
 
 
-def split_periods(periods):
+def _split_periods(periods):
     # Split the periods into parts with a maximal length of 'TIME_DELTA' days
     splitted_periods = []
     for b, e in periods:
@@ -88,9 +100,9 @@ def split_periods(periods):
 if __name__ == '__main__':
     pass
     u = TEST_USERNAME
-    # scrape_user_tweets(u)
+    # _scrape_user_tweets(u)
     scrape_all_users()
-    # calculate_scrape_periods(TEST_USERNAME)
+    # _determine_scrape_periods(TEST_USERNAME)
     # BEGIN_DATE = datetime(2019,9,29)
 
-    # get_periods_without_min_tweets(TEST_USERNAME, BEGIN_DATE, END_DATE)
+    # _get_periods_without_min_tweets(TEST_USERNAME, BEGIN_DATE, END_DATE)

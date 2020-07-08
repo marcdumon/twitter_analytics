@@ -32,9 +32,6 @@ class TwitterScraper:
     _twint_command = None
     _use_proxy_server = SCRAPE_WITH_PROXY
 
-    # Todo: exceptions
-    #       proxy
-
     def __init__(self, username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
         self.username = username
         self.begin_date, self.end_date = begin_date, end_date
@@ -43,8 +40,8 @@ class TwitterScraper:
     def execute_scraping(self):
         while True:
             try:
-                tweets_df = self.scrape_using_twint()
-                return tweets_df
+                scraped_df = self.scrape_using_twint()
+                return scraped_df
             except:
                 print('error')
                 raise
@@ -61,10 +58,11 @@ class TwitterScraper:
             c.Proxy_host, c.Proxy_port = self.proxy_server['ip'], self.proxy_server['port']
             c.Proxy_type = 'http'
         self._twint_command(c)
-        # Get both Tweets_df and User_df; One of them will be None
+        # Get both tweets_df and profile; One of them will be None
         tweets_df = twint.storage.panda.Tweets_df
         profile_df = twint.storage.panda.User_df
-        return tweets_df if profile_df is None else profile_df
+        twitter_df = tweets_df if profile_df is None else profile_df
+        return twitter_df
 
 
 class TweetScraper(TwitterScraper):

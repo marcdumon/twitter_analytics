@@ -3,6 +3,7 @@
 # src - tweet_queries.py
 # md
 # --------------------------------------------------------------------------------------------------------
+import sys
 from datetime import datetime
 from pprint import pprint
 
@@ -35,10 +36,9 @@ def get_collection():
     return collection
 
 
-def setup_collection(): # Todo: add indexes
+def setup_collection():  # Todo: add indexes
     collection = get_collection()
     collection.create_index('tweet_id', unique=True)
-
 
 
 def q_get_nr_tweets_per_day(username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
@@ -61,9 +61,10 @@ def q_save_a_tweet(tweet):
         result = collection.insert_one(tweet)
     except DuplicateKeyError as e:
         logger.error(f"Duplicate: {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
+    except:
+        logger.error(f'Unknown error: {sys.exc_info()[0]}')
+        raise
 
-
-on.insert_many(x)
 
 def q_test():
     xxx = get_collection()

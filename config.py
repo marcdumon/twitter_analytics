@@ -15,8 +15,8 @@ DATA_TYPES = {'tweets': False, 'profiles': True}
 BEGIN_DATE = datetime(2012, 1, 1)
 END_DATE = datetime.today()
 
-TIME_DELTA = 30
-SCRAPE_ONLY_MISSING_DATES = False
+TIME_DELTA = 365
+SCRAPE_ONLY_MISSING_DATES = True
 
 SCRAPE_WITH_PROXY = False
 
