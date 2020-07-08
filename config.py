@@ -9,16 +9,17 @@ DATABASE = 'twitter_database_xxx'
 
 # TWITTER SETTINGS
 SCRAPE_TWITTER = True
-DATA_TYPES = {'tweets': False, 'profiles': True}
+DATA_TYPES = {'tweets': True, 'profiles': True}
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
 # END_DATE = datetime.today()
-BEGIN_DATE = datetime(2012, 1, 1)
-END_DATE = datetime.today()
+BEGIN_DATE = datetime(2018, 9, 1)
+# END_DATE = datetime.today()
+END_DATE = datetime(2018, 10, 30)
 
-TIME_DELTA = 365
-SCRAPE_ONLY_MISSING_DATES = True
+TIME_DELTA = 60
+SCRAPE_ONLY_MISSING_DATES = False
 
-SCRAPE_WITH_PROXY = False
+SCRAPE_WITH_PROXY = True
 
 # PROXY SETTINGS
 SCRAPE_PROXIES = False
@@ -97,7 +98,7 @@ USERS_LIST = {
     'problems': []
 
 }
-USERS_LIST = {'xxx': ['daemsgreet']}
+# USERS_LIST = {'xxx': ['daemsgreet']}
 
 TEST_USERNAME = 'daemsgreet'
 # TEST_USERNAME = 'peter_mertens'

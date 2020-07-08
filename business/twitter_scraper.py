@@ -16,7 +16,7 @@ import twint.output
 import twint.storage.panda
 from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError
 
-from business.proxy_controller import get_a_proxy_server
+from business.proxy_manager import get_a_proxy_server
 from config import SCRAPE_WITH_PROXY
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
@@ -26,7 +26,7 @@ set_pandas_display_options()
 
 class TwitterScraper:
     """
-    Base class to scrape twitter tweets and profile for a username and send that data to the database for storage
+    Base class to scrape twitter tweets and profile for a username and send that data to the the scraping_controller for further handeling
     """
     _name = ''
     _twint_command = None
@@ -40,13 +40,13 @@ class TwitterScraper:
     def execute_scraping(self):
         while True:
             try:
-                scraped_df = self.scrape_using_twint()
+                scraped_df = self._scrape_using_twint()
                 return scraped_df
             except:
                 print('error')
                 raise
 
-    def scrape_using_twint(self):
+    def _scrape_using_twint(self):
         c = twint.Config()
         twint.storage.panda.clean()
         c.Username = self.username
@@ -57,6 +57,7 @@ class TwitterScraper:
         if self.proxy_server:
             c.Proxy_host, c.Proxy_port = self.proxy_server['ip'], self.proxy_server['port']
             c.Proxy_type = 'http'
+            logger.debug(f"Scraping using proxy server {self.proxy_server['ip']}:{self.proxy_server['port']}")
         self._twint_command(c)
         # Get both tweets_df and profile; One of them will be None
         tweets_df = twint.storage.panda.Tweets_df
@@ -71,8 +72,6 @@ class TweetScraper(TwitterScraper):
         self._twint_command = twint.run.Search
         super(TweetScraper, self).__init__(username, begin_date, end_date)
 
-        pass
-
 
 class ProfileScraper(TwitterScraper):
     def __init__(self, username):
@@ -82,10 +81,12 @@ class ProfileScraper(TwitterScraper):
 
 
 if __name__ == '__main__':
-    x = TwitterScraper('xxx')
-    xx = TweetScraper('marcdumon')
-    xx.begin_date = '2020-01-01'
-    xx.end_date = '2020-02-01'
+    # x = TwitterScraper('xxx')
+    xx = TweetScraper('smienos')
+
+    xx.begin_date = datetime(2018,9,17)
+    xx.end_date = datetime(2018,9,19)
 
     # xx = ProfileScraper('marcdumon', True)
-    xx.scrape_using_twint()
+    df = xx._scrape_using_twint()
+    print(df)

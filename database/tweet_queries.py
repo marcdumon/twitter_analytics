@@ -22,8 +22,8 @@ Queries accept and return a dict or a lists of dicts when suitable
 
 """
 IMPLEMENTED QUERIES
--  q_get_nr_tweets_per_day(username, begin_date, end_date)
-
+- q_get_nr_tweets_per_day(username, begin_date, end_date)
+- q_save_a_tweet(tweet)
 """
 
 collection_name = 'tweets'

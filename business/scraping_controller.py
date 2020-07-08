@@ -5,17 +5,38 @@
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, date, timedelta
 import pandas as pd
+
+from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
 from config import USERS_LIST, SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TEST_USERNAME, TIME_DELTA, DATA_TYPES
+from database.proxy_facade import save_proxies
 from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profile
 from tools.logger import logger
+
+"""
+A collection of functions to control scraping and saving proxy servers, Twitter tweets and profiles
+"""
+
+
+def scrape_proxies():
+    logger.info('=' * 150)
+    logger.info('Start scrapping Proxies')
+    logger.info('=' * 150)
+
+    logger.info(f'Start scraping proxies from free_proxy_list.net')
+    proxies_df = ProxyScraper.scrape_free_proxy_list()
+    save_proxies(proxies_df)
+    logger.info(f'Start scraping proxies from hidemy.name')
+    proxies_df = ProxyScraper.scrape_hide_my_name()
+    save_proxies(proxies_df)
 
 
 def scrape_all_users():
     logger.info('=' * 150)
     logger.info('Start scrapping Twitter')
     logger.info('=' * 150)
-    for username in USERS_LIST['xxx']: # Todo: generalise for all users
+    for username in USERS_LIST['opiniemakers']:  # Todo: generalise for all users
+        username = username.lower()
         logger.info('-' * 150)
         logger.info(f'Start scraping Twitter for user: {username}')
         logger.info('-' * 150)
@@ -99,10 +120,5 @@ def _split_periods(periods):
 
 if __name__ == '__main__':
     pass
-    u = TEST_USERNAME
-    # _scrape_user_tweets(u)
-    scrape_all_users()
-    # _determine_scrape_periods(TEST_USERNAME)
-    # BEGIN_DATE = datetime(2019,9,29)
-
-    # _get_periods_without_min_tweets(TEST_USERNAME, BEGIN_DATE, END_DATE)
+    # scrape_all_users()
+    scrape_proxies()

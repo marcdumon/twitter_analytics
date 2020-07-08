@@ -15,9 +15,9 @@ from tools.utils import set_pandas_display_options
 
 set_pandas_display_options()
 """
-Group of functions to store and retrief data via one or more queries from one or more collections.
+Group of functions to store and retrieve twitter data via one or more queries from one or more collections.
 The functions act as a shield to the database queries for higher layers. 
-Functions accept return dataframes when suitable
+Functions accept and return dataframes when suitable
 """
 
 """
@@ -123,9 +123,9 @@ def get_join_date(username):
     try:
         join_date = profile['join_date']
     except TypeError as e:
-        logger.error(f'Couldn\'t get the joint_date for user {username}')
+        logger.error(f'Couldn\'t get the join_date for user {username}')
         logger.error(f'Error message:{e}')
-        logger.error(f'Returning joint_date = 1900-01-01')
+        logger.error(f'Returning join_date = 1900-01-01')
         join_date = '1900-01-01'
     join_date = datetime.strptime(join_date, '%Y-%m-%d')
     return join_date
