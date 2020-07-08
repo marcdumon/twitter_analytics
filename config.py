@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, timedelta, date
 
-DATABASE = 'twitter_database'
+DATABASE = 'twitter_database_xxx'
 
 # TWITTER SETTINGS
 SCRAPE_TWITTER = True
@@ -15,8 +15,8 @@ DATA_TYPES = {'tweets': False, 'profiles': True}
 BEGIN_DATE = datetime(2012, 1, 1)
 END_DATE = datetime.today()
 
-TIME_DELTA = 3
-SCRAPE_ONLY_MISSING_DATES = True
+TIME_DELTA = 30
+SCRAPE_ONLY_MISSING_DATES = False
 
 SCRAPE_WITH_PROXY = False
 

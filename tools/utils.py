@@ -26,6 +26,9 @@ def dict_to_query(dictionary: dict) -> str:
     return urllib.parse.urlencode(dictionary)
 
 
+
+
+
 def set_pandas_display_options():
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)

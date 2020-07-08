@@ -1,6 +1,6 @@
 
 
-### ToDo:
+### Issues:
 - Many functions and query use begin_date and end_date. Everywhere the default is datetime.... This should be shorter.  
   Options:  
          
@@ -9,7 +9,8 @@
       - f(start_date=None, ...):
             if not start_date: start_date=datetime(...)
       - f(..., **kwargs):
-- 
+
+- Some data change after beeing scraped. Ex: nlikes, nretweets, etc  
     
         
     

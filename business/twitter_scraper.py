@@ -32,23 +32,31 @@ class TwitterScraper:
     _twint_command = None
     _use_proxy_server = SCRAPE_WITH_PROXY
 
-    # Todo: Is it better to make username a class variable and dates instance variables of all instance or all class variables.
-    #       What are the consequences for multiprocessing?
-    # username = '' # I choose to make username and dates instance variables because it's more beautifull
+    # Todo: exceptions
+    #       proxy
 
-    def __init__(self, username, begin_date='2000-01-01', end_date='2000-01-01'):
+    def __init__(self, username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
         self.username = username
         self.begin_date, self.end_date = begin_date, end_date
         self.proxy_server = get_a_proxy_server() if self._use_proxy_server else None  # Tocheck:
 
-    def get_twitter_data(self):
+    def execute_scraping(self):
+        while True:
+            try:
+                tweets_df = self.scrape_using_twint()
+                return tweets_df
+            except:
+                print('error')
+                raise
+
+    def scrape_using_twint(self):
         c = twint.Config()
         twint.storage.panda.clean()
         c.Username = self.username
         c.Debug = False
         c.Pandas = True
-        c.Since = self.begin_date
-        c.Until = self.end_date
+        c.Since = datetime.strftime(self.begin_date, '%Y-%m-%d')
+        c.Until = datetime.strftime(self.end_date, '%Y-%m-%d')
         if self.proxy_server:
             c.Proxy_host, c.Proxy_port = self.proxy_server['ip'], self.proxy_server['port']
             c.Proxy_type = 'http'
@@ -58,27 +66,12 @@ class TwitterScraper:
         profile_df = twint.storage.panda.User_df
         return tweets_df if profile_df is None else profile_df
 
-    def execute_scraping(self):
-        logger.info(f'Start scraping {self._name} for user: {self.username} starting on {self.begin_date} and ending on {self.end_date}')
-
-        try:
-            success = False
-            while not success:
-                twitter_df = self.get_twitter_data()
-                print('=' * 150)
-                print(twitter_df)
-                print('=' * 150)
-                success = True
-                1/0
-        except:
-            pass
-
 
 class TweetScraper(TwitterScraper):
     def __init__(self, username, begin_date='2000-01-01', end_date='2035-01-01'):
         self._name = 'tweets'
         self._twint_command = twint.run.Search
-        super(TweetScraper, self).__init__(username,begin_date,end_date)
+        super(TweetScraper, self).__init__(username, begin_date, end_date)
 
         pass
 
@@ -97,4 +90,4 @@ if __name__ == '__main__':
     xx.end_date = '2020-02-01'
 
     # xx = ProfileScraper('marcdumon', True)
-    xx.get_twitter_data()
+    xx.scrape_using_twint()
