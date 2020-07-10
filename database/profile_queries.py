@@ -15,10 +15,21 @@ from tools.logger import logger
 Group of queries to store and retrief data from the profile collections.
 The queries start with 'q_' 
 Queries return a dict or a lists of dicts when suitable
-"""
 
-"""
+Convention:
+-----------
+- documnet:     d
+- query:        q
+- projection:   p
+- sort:         s
+- filter:       f
+- update:       u
+- pipeline      pl
+- match         m
+- group:        g
+
 IMPLEMENTED QUERIES
+-------------------
 - q_get_profile(username)
 - q_save_a_profile(username)
 

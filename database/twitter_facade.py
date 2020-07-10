@@ -18,10 +18,9 @@ set_pandas_display_options()
 Group of functions to store and retrieve twitter data via one or more queries from one or more collections.
 The functions act as a shield to the database queries for higher layers. 
 Functions accept and return dataframes when suitable
-"""
 
-"""
 IMPLEMENTED FUNCTIONS
+---------------------
 - get_join_date(username)
 - get_nr_tweets_per_day(username, begin_date, end_date)
 - save_tweets(tweets_df)

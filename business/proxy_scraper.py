@@ -46,6 +46,7 @@ class ProxyScraper:
         proxies_df['port'] = [elem[1].text for elem in list_td]
         proxies_df['source'] = 'free-proxy-list.net'
         proxies_df['datetime'] = datetime.now()
+        proxies_df = proxies_df[['datetime', 'ip', 'port', 'source']]
         return proxies_df
 
     @staticmethod
@@ -71,6 +72,7 @@ class ProxyScraper:
                                                 'source': 'hidemy.name',
                                                 'datetime': datetime.now()},
                                                ignore_index=True)
+                proxies_df = proxies_df[['datetime', 'ip', 'port', 'source']]
         driver.close()
 
         return proxies_df
@@ -80,6 +82,3 @@ if __name__ == '__main__':
     ps = ProxyScraper()
     ps.scrape_free_proxy_list()
     # ps.scrape_hide_my_name()
-
-
-

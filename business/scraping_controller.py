@@ -32,14 +32,14 @@ def scrape_proxies():
 
 
 def scrape_all_users():
-    logger.info('=' * 150)
+    logger.info('=' * 100)
     logger.info('Start scrapping Twitter')
-    logger.info('=' * 150)
+    logger.info('=' * 100)
     for username in USERS_LIST['opiniemakers']:  # Todo: generalise for all users
         username = username.lower()
-        logger.info('-' * 150)
+        logger.info('-' * 100)
         logger.info(f'Start scraping Twitter for user: {username}')
-        logger.info('-' * 150)
+        logger.info('-' * 100)
         if DATA_TYPES['profiles']:
             logger.info(f'Start scraping profile for user: {username}')
             profile_df = _scrape_user_profile(username)
@@ -64,6 +64,7 @@ def _scrape_user_profile(username):
 
 def _scrape_user_tweets(username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
     tweet_scraper = TweetScraper(username, begin_date, end_date)
+    # Todo: proxy servers here
     tweets_df = tweet_scraper.execute_scraping()
     return tweets_df
 
