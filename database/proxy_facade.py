@@ -9,7 +9,7 @@ from pprint import pprint
 import pandas as pd
 from config import TEST_USERNAME
 from database.profile_queries import q_get_a_profile, q_save_a_profile
-from database.proxy_queries import q_save_a_proxy, q_get_proxies, q_update_a_proxy_test
+from database.proxy_queries import q_save_a_proxy, q_get_proxies, q_update_a_proxy_test, q_set_a_proxy_success_flag, q_reset_a_proxy_success_flag
 from database.tweet_queries import q_get_nr_tweets_per_day, q_save_a_tweet
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
@@ -25,15 +25,17 @@ IMPLEMENTED FUNCTIONS
 - get_proxies(blacklisted=None, max_delay=None)
 - save_a_proxy_test(proxy, delay)
 - save_proxies(tweets_df)
-- set_all_proxies(delay, blacklisted, error_code)
+- set_a_proxy_success_flag(proxy, success_flag)
+- set_proxies(delay, blacklisted, error_code)
 """
 
 
-def get_proxies(blacklisted=None, max_delay=None):
+def get_proxies(blacklisted=None, max_delay=None, success=None):
     q = {}
     if blacklisted: q['blacklisted'] = blacklisted
     if max_delay: q['$and'] = [{'delay': {'$gt': 0}},
-                                         {'delay': {'$lte': max_delay}}]
+                               {'delay': {'$lte': max_delay}}]
+    if success: q['success'] = success
     proxies = q_get_proxies(q)
     proxies_df = pd.DataFrame(proxies)
     return proxies_df
@@ -50,7 +52,7 @@ def save_proxies(proxies_df):
         q_save_a_proxy(proxy)
 
 
-def set_all_proxies(delay=0, blacklisted=False, error_code=-1):
+def set_proxies(delay=0, blacklisted=False, error_code=-1):
     for proxy in q_get_proxies({}):
         proxy_test = proxy
         proxy_test['delay'] = delay
@@ -59,8 +61,19 @@ def set_all_proxies(delay=0, blacklisted=False, error_code=-1):
         q_update_a_proxy_test(proxy_test)
 
 
+def set_a_proxy_success_flag(proxy, success_flag):
+    q_set_a_proxy_success_flag(proxy, success_flag)
+
+
+def reset_proxies_success_flag():
+    for proxy in q_get_proxies({}):
+        proxy = {'ip': proxy['ip'], 'port': proxy['port']}
+        q_reset_a_proxy_success_flag(proxy)
+
+
 if __name__ == '__main__':
     # get_proxies()
     # set_all_proxies()
-    print(get_proxies(blacklisted=False,max_delay=100))
+    # print(get_proxies(blacklisted=False, max_delay=100))
     # print(get_proxies())
+    reset_proxies_success_flag()

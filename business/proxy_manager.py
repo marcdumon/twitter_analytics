@@ -13,7 +13,7 @@ from pathlib import Path
 from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError
 
 from business.twitter_scraper import TweetScraper
-from database.proxy_facade import get_proxies, save_a_proxy_test, set_all_proxies
+from database.proxy_facade import get_proxies, save_a_proxy_test
 from tools.logger import logger
 
 """

@@ -8,6 +8,7 @@ import urllib
 from urllib import parse
 import pandas as pd
 
+
 def current_datetime(alt: str = False) -> [datetime.datetime, str]:
     """Returns current datetime object by default. Accepts alternate format for string format result."""
     if alt:
@@ -22,12 +23,18 @@ def current_date(alt: str = False) -> [datetime.date, str]:
     return datetime.date.today()
 
 
+def str2d(date_time_str):
+    """Convert a 'yyyy-mm-dd' to datetime(yyyy, mm, dd)"""
+    return datetime.datetime.strptime(date_time_str, '%Y-%m-%d')
+
+
+def dt2str(dt):
+    """Convert a 'yyyy-mm-dd' to datetime(yyyy, mm, dd)"""
+    return dt.strftime('%Y-%m-%d')
+
 
 def dict_to_query(dictionary: dict) -> str:
     return urllib.parse.urlencode(dictionary)
-
-
-
 
 
 def set_pandas_display_options():

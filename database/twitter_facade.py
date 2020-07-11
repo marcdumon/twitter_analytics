@@ -9,7 +9,7 @@ from pprint import pprint
 import pandas as pd
 from config import TEST_USERNAME
 from database.profile_queries import q_get_a_profile, q_save_a_profile, q_get_profiles, q_set_a_scrape_flag
-from database.tweet_queries import q_get_nr_tweets_per_day, q_save_a_tweet
+from database.tweet_queries import q_get_nr_tweets_per_day, q_save_a_tweet, q_update_a_tweet
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
 
@@ -31,7 +31,8 @@ IMPLEMENTED FUNCTIONS
 """
 
 
-def save_tweets(tweets_df):
+def save_tweets(tweets_df, update=True):
+    # Update necessary to have correct likes, replies, etc
     def _format_tweets_df(df):
         df = df.rename(columns={'id': 'tweet_id'})
         # Make user_id string
@@ -101,7 +102,7 @@ def save_tweets(tweets_df):
     tweets_df = _reorder_tweets_df_columns(tweets_df)
 
     for _, row in tweets_df.iterrows():
-        q_save_a_tweet(row.to_dict())
+        q_update_a_tweet(row.to_dict()) if update else q_save_a_tweet(row.to_dict())
 
 
 def save_profiles(profiles_df):
@@ -161,9 +162,14 @@ def set_a_scrape_flag(username, flag):
 
 
 if __name__ == '__main__':
-    u = TEST_USERNAME
-    # print(get_nr_tweets_per_day(u))
+    from datetime import datetime
+
+    u = 'elsampe'
+    sd = datetime(2011, 12, 31)
+    ed = datetime(2012, 1, 1)
+
+    print(get_nr_tweets_per_day(u, sd, ed))
     # get_join_date((u))
-    reset_all_scrape_flags()
+    # reset_all_scrape_flags()
     # set_a_scrape_flag('smienos', 10)
     # get_profiles()

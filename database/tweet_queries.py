@@ -34,6 +34,7 @@ IMPLEMENTED QUERIES
 -------------------
 - q_get_nr_tweets_per_day(username, begin_date, end_date)
 - q_save_a_tweet(tweet)
+- q_update_a_tweet(tweet)
 """
 
 collection_name = 'tweets'
@@ -72,10 +73,18 @@ def q_save_a_tweet(tweet):
     try:
         result = collection.insert_one(tweet)
     except DuplicateKeyError as e:
-        logger.warning(f"Duplicate: {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
+        logger.debug(f"Duplicate: {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
     except:
         logger.error(f'Unknown error: {sys.exc_info()[0]}')
         raise
+
+
+def q_update_a_tweet(tweet):
+    collection = get_collection()
+    f = {'tweet_id': tweet['tweet_id']}
+    u = {'$set': tweet}
+    result = collection.update_one(f, u, upsert=True)
+    logger.debug(f"Updated: {result.raw_result} - {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
 
 
 if __name__ == '__main__':

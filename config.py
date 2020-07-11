@@ -12,11 +12,13 @@ SCRAPE_TWITTER = False
 DATA_TYPES = {'tweets': True, 'profiles': True}
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
 # END_DATE = datetime.today()
-BEGIN_DATE = datetime(1900, 6, 1)
-END_DATE = datetime(2012, 1, 1)
+# BEGIN_DATE = datetime(1900, 1, 1)
+# END_DATE = datetime(2012, 1, 1)
+BEGIN_DATE = datetime(2020, 1, 1)
+END_DATE = datetime(2020, 2, 1)
 
-TIME_DELTA = 60
-SCRAPE_ONLY_MISSING_DATES = True
+TIME_DELTA = 365
+SCRAPE_ONLY_MISSING_DATES = False
 
 SCRAPE_WITH_PROXY = True
 
@@ -24,7 +26,8 @@ SCRAPE_WITH_PROXY = True
 SCRAPE_PROXIES = False
 PROXIES_DOWNLOAD_SITES = {'free_proxy_list': True, 'hide_my_name': True}
 
-LOGGING_LEVEL = 'Debug'
+# LOGGING_LEVEL = 'Debug'
+LOGGING_LEVEL = 'Info'
 
 WORDCLOUD_BLACKLIST = ['dag', 'mens', 'jaar', 'uur', 'tweet', 'video', 'politiekelent']
 

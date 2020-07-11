@@ -9,8 +9,9 @@
       - f(start_date=None, ...):
             if not start_date: start_date=datetime(...)
       - f(..., **kwargs):
+      - f(start_date=str2dt('2020-01-01')
 
-- Some data change after beeing scraped. Ex: nlikes, nretweets, etc  
+- Some data change after beeing scraped. Ex: nlikes, nretweets, etc. When rescraping it's not updated because duplicate!  
     
         
     
