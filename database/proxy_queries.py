@@ -74,7 +74,7 @@ def q_save_a_proxy(proxy):
     try:
         collection.insert_one(d)
     except DuplicateKeyError as e:
-        logger.error(f"Duplicate proxy: {proxy['ip']}:{proxy['port']}")
+        logger.warning(f"Duplicate proxy: {proxy['ip']}:{proxy['port']}")
 
 
 def q_update_a_proxy_test(proxy_test):

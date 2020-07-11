@@ -72,7 +72,7 @@ def q_save_a_tweet(tweet):
     try:
         result = collection.insert_one(tweet)
     except DuplicateKeyError as e:
-        logger.error(f"Duplicate: {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
+        logger.warning(f"Duplicate: {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
     except:
         logger.error(f'Unknown error: {sys.exc_info()[0]}')
         raise

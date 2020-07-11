@@ -5,18 +5,18 @@
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, timedelta, date
 
-DATABASE = 'twitter_database'
+DATABASE = 'twitter_database_xxx'
 
 # TWITTER SETTINGS
 SCRAPE_TWITTER = False
 DATA_TYPES = {'tweets': True, 'profiles': True}
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
-END_DATE = datetime.today()
+# END_DATE = datetime.today()
 BEGIN_DATE = datetime(1900, 6, 1)
-# END_DATE = datetime(2020, 6, 3)
+END_DATE = datetime(2012, 1, 1)
 
 TIME_DELTA = 60
-SCRAPE_ONLY_MISSING_DATES = False
+SCRAPE_ONLY_MISSING_DATES = True
 
 SCRAPE_WITH_PROXY = True
 

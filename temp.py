@@ -34,56 +34,81 @@ def scrape_users_tweets():
     reset_all_scrape_flags()
     usernames_df = get_usernames()
     # Proxy queue
+    proxy_queue = populate_proxy_queue()
+    usernames = [(username, proxy_queue) for username in usernames_df['username']]
+    with mp.Pool(processes=25) as pool:
+        result = pool.starmap(scrape_a_user_tweets, usernames)
+
+
+def populate_proxy_queue():
     proxy_df = get_proxies(blacklisted=False, max_delay=25)
     proxy_df.sort_values(by='delay')
     manager = mp.Manager()
     proxy_queue = manager.Queue()
     for _, proxy in proxy_df.iterrows():
         proxy_queue.put((proxy['ip'], proxy['port']))
-    usernames = [(username, proxy_queue) for username in usernames_df['username']]
-    with mp.Pool(processes=25) as pool:
-        result = pool.starmap(scrape_a_user_tweets, usernames)
+    return proxy_queue
 
 
 def scrape_a_user_tweets(username, proxy_queue):
+    if proxy_queue.qsize()==0: # Todo: risk to have double proxies, if a runing process puts back a proxy
+        proxy_queue=populate_proxy_queue()
     set_a_scrape_flag(username, 'START')
     periods_to_scrape = _determine_scrape_periods(username)
     for (begin_date, end_date) in periods_to_scrape:
-        try:
-            tweets_df, proxy = _scrape_a_user_tweets(username, proxy_queue, begin_date, end_date)
-            if not tweets_df.empty:
-                logger.info(f'Saving {len(tweets_df)} tweets')
-                save_tweets(tweets_df)
-            # Put back the proxy if successful
-            proxy_queue.put(proxy)
-        except ValueError as e:
-            set_a_scrape_flag(username, 'ValueError')
-        except ServerDisconnectedError as e:
-            set_a_scrape_flag(username, 'ServerDisconnectedError')
-        except ClientOSError as e:
-            set_a_scrape_flag(username, 'ClientOSError')
-        except TimeoutError as e:
-            set_a_scrape_flag(username, 'TimeoutError')
-        # except TimeoutError as e:
-        #     set_a_scrape_flag(username, 'TimeoutError')
-        # except TimeoutError as e:
-        #     set_a_scrape_flag(username, 'TimeoutError')
-        # except TimeoutError as e:
-        #     set_a_scrape_flag(username, 'TimeoutError')
-        # except TimeoutError as e:
-        #     set_a_scrape_flag(username, 'TimeoutError')
-        # except TimeoutError as e:
-        #     set_a_scrape_flag(username, 'TimeoutError')
-        # except TimeoutError as e:
-        #     set_a_scrape_flag(username, 'TimeoutError')
+        success, fail_counter = False, 0
+        while (not success) and (fail_counter < 10):
+            try:
+                tweets_df, proxy = _scrape_a_user_tweets(username, proxy_queue, begin_date, end_date)
+                if not tweets_df.empty:
+                    logger.info(f'Saving {len(tweets_df)} tweets')
+                    save_tweets(tweets_df)
+                set_a_scrape_flag(username, 'END')
+                proxy_queue.put(proxy)
+                success = True
 
+            except ValueError as e:
+                set_a_scrape_flag(username, 'ValueError')
+                fail_counter += 1
+                time.sleep(10 * fail_counter)
+                logger.error(f'Error for username {username}. Fail counter = {fail_counter}\n{e}')
 
-        except:
-            print('x' * 3000)
-            print(sys.exc_info()[0])
-            # Do something with the proxy
-            raise
-    set_a_scrape_flag(username, 'END')
+            except ServerDisconnectedError as e:
+                set_a_scrape_flag(username, 'ServerDisconnectedError')
+                fail_counter += 1
+                time.sleep(10 * fail_counter)
+                logger.error(f'Error for username {username}. Fail counter = {fail_counter}\n{e}')
+
+            except ClientOSError as e:
+                set_a_scrape_flag(username, 'ClientOSError')
+                fail_counter += 1
+                time.sleep(10 * fail_counter)
+                logger.error(f'Error for username {username}. Fail counter = {fail_counter}\n{e}')
+
+            except TimeoutError as e:
+                set_a_scrape_flag(username, 'TimeoutError')
+                fail_counter += 1
+                time.sleep(10 * fail_counter)
+                logger.error(f'Error for username {username}. Fail counter = {fail_counter}\n{e}')
+
+            # except TimeoutError as e:
+            #     set_a_scrape_flag(username, 'TimeoutError')
+            # except TimeoutError as e:
+            #     set_a_scrape_flag(username, 'TimeoutError')
+            # except TimeoutError as e:
+            #     set_a_scrape_flag(username, 'TimeoutError')
+            # except TimeoutError as e:
+            #     set_a_scrape_flag(username, 'TimeoutError')
+            # except TimeoutError as e:
+            #     set_a_scrape_flag(username, 'TimeoutError')
+            # except TimeoutError as e:
+            #     set_a_scrape_flag(username, 'TimeoutError')
+
+            except:
+                print('x' * 3000)
+                print(sys.exc_info()[0])
+                # Do something with the proxy
+                raise
 
 
 def _scrape_a_user_tweets(username, proxy_queue, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
