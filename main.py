@@ -4,14 +4,16 @@
 # md
 # --------------------------------------------------------------------------------------------------------
 
-from business.scraping_controller import scrape_proxies, reset_users_proxies, scrape_users_tweets
+from business.scraping_controller import reset_users_proxies, scrape_users_tweets_profile
 
 # Todo: use arguments to control parameters
 
-reset = False
+reset = True
 resume = True
-processes = 10
-max_delay = 15
+processes = 25
+max_delay = 20
+
+
 if __name__ == '__main__':
     if reset: reset_users_proxies()
-    scrape_users_tweets(resume=False, processes=processes, max_delay=max_delay)
+    scrape_users_tweets_profile(resume=resume, processes=processes, max_delay=max_delay)

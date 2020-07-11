@@ -3,22 +3,23 @@
 # Twitter_Scraping - config.py
 # md
 # --------------------------------------------------------------------------------------------------------
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
-DATABASE = 'twitter_database_xxx'
+DATABASE = 'twitter_database'
 
 # TWITTER SETTINGS
-SCRAPE_TWITTER = False
-DATA_TYPES = {'tweets': False, 'profiles': True}
+DATA_TYPES = {'tweets': True, 'profiles': False}
+
+
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
 # END_DATE = datetime.today()
 # BEGIN_DATE = datetime(1900, 1, 1)
 # END_DATE = datetime(2012, 1, 1)
 BEGIN_DATE = datetime(2020, 1, 1)
 END_DATE = datetime.today() - timedelta(days=14)
-# END_DATE = datetime(2020, 2, 1)
+# END_DATE = datetime(2020, 1, 3)
 
-TIME_DELTA = 30
+TIME_DELTA = 7
 SCRAPE_ONLY_MISSING_DATES = False
 
 SCRAPE_WITH_PROXY = True

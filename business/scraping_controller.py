@@ -44,16 +44,12 @@ def scrape_proxies():
     save_proxies(proxies_df)
 
 
-
-
-
-
 def reset_users_proxies():
     reset_proxies_success_flag()
     reset_all_scrape_flags()
 
 
-def scrape_users_tweets( processes=10, max_delay=15,resume=True):
+def scrape_users_tweets_profile(processes=10, max_delay=15, resume=True):
     usernames_df = get_usernames()
     if resume: usernames_df = usernames_df[usernames_df['scrape_flag'] != 'END']
     logger.info(f'Scraping {len(usernames_df)} users. using {2} processes/threads and proxies with max_delay {max_delay} sec.')
@@ -75,18 +71,21 @@ def populate_proxy_queue(proxy_queue=None, max_delay=3):
     logger.info(f'Proxy queue poulates. Contains {proxy_queue.qsize()} servers')
     return proxy_queue
 
+
 def scrape_manager(username, proxy_queue):
-    if DATA_TYPES['profiles']:scrape_a_user_profile(username,proxy_queue)
-    if DATA_TYPES['tweets']:scrape_a_user_tweets(username, proxy_queue)
+    if DATA_TYPES['profiles']: scrape_a_user_profile(username, proxy_queue)
+    if DATA_TYPES['tweets']: scrape_a_user_tweets(username, proxy_queue)
+
 
 def scrape_a_user_profile(username, proxy_queue):
     # Todo: Multiprocess + proxyservers
-    proxy={}
+    proxy = {}
     if SCRAPE_WITH_PROXY:
         # Todo: proxy_queue already created, now descide to use it or not?
         logger.info(f'Len proxy queue = {proxy_queue.qsize()}')
         ip, port = proxy_queue.get()
         proxy = {'ip': ip, 'port': port}
+    set_a_scrape_flag(username, 'START')
     profile_scraper = ProfileScraper(username)
     if proxy: profile_scraper.proxy_server = proxy
     profile_scraper.twint_hide_terminal_output = True
@@ -97,10 +96,12 @@ def scrape_a_user_profile(username, proxy_queue):
     if not profile_df.empty:
         logger.info(f'Saving profile for user: {username}')
         save_profiles(profile_df)
+    set_a_scrape_flag(username, 'END')
     # Todo: Exceptions
     logger.warning(f'Put back proxy {proxy}')
     proxy_queue.put((proxy['ip'], proxy['port']))
     set_a_proxy_success_flag(proxy, True)
+
 
 def scrape_a_user_tweets(username, proxy_queue):
     if proxy_queue.qsize() <= 1:  # Risk of double proxies when a thread put banck the proxy
@@ -263,12 +264,8 @@ def _split_periods(periods):
     return splitted_periods
 
 
-
-
-
 if __name__ == '__main__':
     pass
     # scrape_proxies()
     # scrape_a_user_profile('franckentheo')
-    scrape_users_tweets()
-
+    scrape_users_tweets_profile()
