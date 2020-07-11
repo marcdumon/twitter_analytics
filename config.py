@@ -9,15 +9,16 @@ DATABASE = 'twitter_database_xxx'
 
 # TWITTER SETTINGS
 SCRAPE_TWITTER = False
-DATA_TYPES = {'tweets': True, 'profiles': True}
+DATA_TYPES = {'tweets': False, 'profiles': True}
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
 # END_DATE = datetime.today()
 # BEGIN_DATE = datetime(1900, 1, 1)
 # END_DATE = datetime(2012, 1, 1)
 BEGIN_DATE = datetime(2020, 1, 1)
-END_DATE = datetime(2020, 2, 1)
+END_DATE = datetime.today() - timedelta(days=14)
+# END_DATE = datetime(2020, 2, 1)
 
-TIME_DELTA = 365
+TIME_DELTA = 30
 SCRAPE_ONLY_MISSING_DATES = False
 
 SCRAPE_WITH_PROXY = True

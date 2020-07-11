@@ -107,7 +107,6 @@ def save_tweets(tweets_df, update=True):
 
 def save_profiles(profiles_df):
     def _format_profile_df(profile):
-        print(profile['username'])
         profile['username'] = profile['username'].lower()
         profile['join_datetime'] = pd.to_datetime(profile['join_datetime'])  # dd-mm-yyyy h:mm AM -> hh:mm:ss
         profile['join_date'] = pd.to_datetime(f"{profile['join_date']}").strftime('%Y-%m-%d')  # dd-mm-yyyy -> yyyy-mm-dd

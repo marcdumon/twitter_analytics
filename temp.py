@@ -21,7 +21,6 @@ from database.twitter_facade import get_profiles, get_usernames, set_a_scrape_fl
 from datetime import datetime, date, timedelta
 import pandas as pd
 
-from business.proxy_manager import get_a_proxy_server
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
 from config import USERS_LIST, SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TEST_USERNAME, TIME_DELTA, DATA_TYPES
