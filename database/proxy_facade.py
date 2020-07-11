@@ -8,8 +8,8 @@ from pprint import pprint
 
 import pandas as pd
 from config import TEST_USERNAME
-from database.profile_queries import q_get_profile, q_save_a_profile
-from database.proxy_queries import q_save_proxies, q_save_a_proxy, q_get_proxies, q_update_a_proxy_test
+from database.profile_queries import q_get_a_profile, q_save_a_profile
+from database.proxy_queries import q_save_a_proxy, q_get_proxies, q_update_a_proxy_test
 from database.tweet_queries import q_get_nr_tweets_per_day, q_save_a_tweet
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
@@ -22,15 +22,18 @@ Functions accept and return dataframes when suitable
 
 IMPLEMENTED FUNCTIONS
 ---------------------
-- get_proxies(only_blacklisted)
+- get_proxies(blacklisted=None, max_delay=None)
 - save_a_proxy_test(proxy, delay)
 - save_proxies(tweets_df)
 - set_all_proxies(delay, blacklisted, error_code)
 """
 
 
-def get_proxies(only_blacklisted=False):
-    q = {'blacklisted': True} if only_blacklisted else {}
+def get_proxies(blacklisted=None, max_delay=None):
+    q = {}
+    if blacklisted: q['blacklisted'] = blacklisted
+    if max_delay: q['$and'] = [{'delay': {'$gt': 0}},
+                                         {'delay': {'$lte': max_delay}}]
     proxies = q_get_proxies(q)
     proxies_df = pd.DataFrame(proxies)
     return proxies_df
@@ -58,4 +61,6 @@ def set_all_proxies(delay=0, blacklisted=False, error_code=-1):
 
 if __name__ == '__main__':
     # get_proxies()
-    set_all_proxies()
+    # set_all_proxies()
+    print(get_proxies(blacklisted=False,max_delay=100))
+    # print(get_proxies())

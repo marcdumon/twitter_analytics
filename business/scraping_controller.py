@@ -6,11 +6,12 @@
 from datetime import datetime, date, timedelta
 import pandas as pd
 
+from business.proxy_manager import get_a_proxy_server
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
 from config import USERS_LIST, SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TEST_USERNAME, TIME_DELTA, DATA_TYPES
 from database.proxy_facade import save_proxies
-from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profile
+from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles
 from tools.logger import logger
 
 """
@@ -18,10 +19,13 @@ A collection of functions to control scraping and saving proxy servers, Twitter 
 """
 
 
+# See: https://www.cloudcity.io/blog/2019/02/27/things-i-wish-they-told-me-about-multiprocessing-in-python/
+
+
 def scrape_proxies():
-    logger.info('=' * 150)
+    logger.info('=' * 100)
     logger.info('Start scrapping Proxies')
-    logger.info('=' * 150)
+    logger.info('=' * 100)
 
     logger.info(f'Start scraping proxies from free_proxy_list.net')
     proxies_df = ProxyScraper.scrape_free_proxy_list()
@@ -35,35 +39,38 @@ def scrape_all_users():
     logger.info('=' * 100)
     logger.info('Start scrapping Twitter')
     logger.info('=' * 100)
-    for username in USERS_LIST['opiniemakers']:  # Todo: generalise for all users
+    for username in USERS_LIST['xxx']:  # Todo: generalise for all users
         username = username.lower()
         logger.info('-' * 100)
         logger.info(f'Start scraping Twitter for user: {username}')
         logger.info('-' * 100)
         if DATA_TYPES['profiles']:
             logger.info(f'Start scraping profile for user: {username}')
-            profile_df = _scrape_user_profile(username)
+            profile_df = _scrape_a_user_profile(username)
             if not profile_df.empty:
                 logger.info(f'Saving profile')
-                save_profile(profile_df)
+                save_profiles(profile_df)
         if DATA_TYPES['tweets']:
             periods_to_scrape = _determine_scrape_periods(username)
             for (begin_date, end_date) in periods_to_scrape:
                 logger.info(f'Start scraping tweets for user: {username} starting on {begin_date} and ending on {end_date}')
-                tweets_df = _scrape_user_tweets(username, begin_date, end_date)
+                tweets_df = _scrape_a_user_tweets(username, begin_date, end_date)
                 if not tweets_df.empty:
                     logger.info(f'Saving {len(tweets_df)} tweets')
                     save_tweets(tweets_df)
 
 
-def _scrape_user_profile(username):
+def _scrape_a_user_profile(username):
     profile_scraper = ProfileScraper(username)
     profile_df = profile_scraper.execute_scraping()
     return profile_df
 
 
-def _scrape_user_tweets(username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
+def _scrape_a_user_tweets(username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
     tweet_scraper = TweetScraper(username, begin_date, end_date)
+    if SCRAPE_WITH_PROXY:
+        proxy = get_a_proxy_server(max_delay=100)
+
     # Todo: proxy servers here
     tweets_df = tweet_scraper.execute_scraping()
     return tweets_df
@@ -121,5 +128,5 @@ def _split_periods(periods):
 
 if __name__ == '__main__':
     pass
-    # scrape_all_users()
-    scrape_proxies()
+    scrape_all_users()
+    # scrape_proxies()

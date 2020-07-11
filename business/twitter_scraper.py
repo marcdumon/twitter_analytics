@@ -88,6 +88,7 @@ class _TwitterScraper:
         if self.proxy_server:
             c.Proxy_host, c.Proxy_port = self.proxy_server['ip'], self.proxy_server['port']
             c.Proxy_type = 'http'
+        c.User_id = None  # Bugfix twint
         return c
 
 

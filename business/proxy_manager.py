@@ -12,7 +12,6 @@ from pathlib import Path
 
 from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError
 
-from business.file_logger import f_logger
 from business.twitter_scraper import TweetScraper
 from database.proxy_facade import get_proxies, save_a_proxy_test, set_all_proxies
 from tools.logger import logger
@@ -20,6 +19,9 @@ from tools.logger import logger
 """
 Collection of functions to manage testing and allocations of proxy servers
 """
+
+
+
 
 
 def get_a_proxy_server(max_delay=100):
@@ -46,9 +48,6 @@ def _test_and_save_proxy(ip, port):
     logger.info(f'Start testing proxy server: {ip}:{port}')
     logger.info('-' * 100)
     info = f'{ip}_{port}'
-    logfile = Path(f'/media/Development/Twitter_Analytics/src/log_files/log_proxy_scraping_{info}.txt')
-    message = f'Logfile Proxy Scraping from {datetime.now()}\n======================================================\n'
-    f_logger(logfile, message, 'a')
     delay = -1
     blacklisted = True
     error_code = -1
@@ -66,30 +65,20 @@ def _test_and_save_proxy(ip, port):
         delay = time.time() - start_time
         blacklisted, error_code = False, 0
     except ValueError as e:
-        logger.error(f'Error ValueERROR {ip}:{port}')
-        logger.error(f'Error message: {e}')
-        message = f'{datetime.now()} - Error: ValueError Server:{ip}:{port}\n\n{e}'
-        f_logger(logfile, message, 'a')
         delay, blacklisted, error_code = 0, True, 1
+        logger.error(f'Error ValueERROR Server: {ip}:{port}')
+        logger.error(f'Error message: {e}')
     except (TimeoutError, CancelledError) as e:
-        logger.error(f'Error: asyncio TimeoutError/CancelledError Server:{ip}:{port}')
-        logger.error(f'Error message: {e}')
-        message = f'Error: asyncio TimeoutError/CancelledError Server:{ip}:{port}\n\n{e}'
-        f_logger(logfile, message, 'a')
         delay, blacklisted, error_code = 0, True, 2
-    except (ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError) as e:
-        logger.error(f'Error aiohttp ServerDisconnectedError/ClientHttpProxyError/ClientProxyConnectionError/ClientOSError Server: {ip}:{port}')
+        logger.error(f'Error: asyncio Server:{ip}:{port}')
         logger.error(f'Error message: {e}')
-        message = f'Error aiohttp ServerDisconnectedError/ClientHttpProxyError/ClientProxyConnectionError/ClientOSError Server: {ip}:{port}\n\n{e}'
-        f_logger(logfile, message, 'a')
+    except (ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError) as e:
         delay, blacklisted, error_code = 0, True, 3
+        logger.error(f'Error aiohttp Server: {ip}:{port}')
+        logger.error(f'Error message: {e}')
     except:
-        message = f'Unknown Error {ip}:{port} \n{sys.exc_info()[0]} \n'
-        f_logger(logfile, message, 'a')
         delay, blacklisted, error_code = 0, True, 9
         raise
-    else:
-        pass
     finally:
         proxy_test = {'ip': ip, 'port': port,
                       'delay': delay,

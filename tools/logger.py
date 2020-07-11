@@ -30,8 +30,7 @@ handler = logging.StreamHandler()
 handler.setLevel(level)
 
 # create formatter
-# format = '[%(filename)s:%(lineno)s %(funcName)20s]: %(asctime)s [%(levelname)8s]: %(message)s'
-format = '%(asctime)s: [%(filename)-30s %(funcName)25s:%(lineno)-3s]:  [%(levelname)-7s]: %(message)s'
+format = '%(asctime)s: [%(filename)-25s %(funcName)25s:%(lineno)-3s]:  [%(levelname)-7s]: %(message)s'
 formatter = coloredlogs.ColoredFormatter(format)
 
 # add formatter to console handler

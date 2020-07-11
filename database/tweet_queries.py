@@ -80,6 +80,6 @@ def q_save_a_tweet(tweet):
 
 if __name__ == '__main__':
     # print(collection_name)
-    # setup_collection()
-    print(q_get_nr_tweets_per_day(TEST_USERNAME))
+    setup_collection()
+    # print(q_get_nr_tweets_per_day(TEST_USERNAME))
     # q_test()

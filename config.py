@@ -5,21 +5,20 @@
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, timedelta, date
 
-DATABASE = 'twitter_database_xxx'
+DATABASE = 'twitter_database'
 
 # TWITTER SETTINGS
 SCRAPE_TWITTER = False
 DATA_TYPES = {'tweets': True, 'profiles': True}
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
-# END_DATE = datetime.today()
-BEGIN_DATE = datetime(2018, 9, 1)
-# END_DATE = datetime.today()
-END_DATE = datetime(2018, 10, 30)
+END_DATE = datetime.today()
+BEGIN_DATE = datetime(1900, 6, 1)
+# END_DATE = datetime(2020, 6, 3)
 
 TIME_DELTA = 60
 SCRAPE_ONLY_MISSING_DATES = False
 
-SCRAPE_WITH_PROXY = False
+SCRAPE_WITH_PROXY = True
 
 # PROXY SETTINGS
 SCRAPE_PROXIES = False
@@ -97,7 +96,7 @@ USERS_LIST = {
     'problems': []
 
 }
-# USERS_LIST = {'xxx': ['daemsgreet']}
+USERS_LIST = {'xxx': ['pvdabelgie']}
 
 TEST_USERNAME = 'daemsgreet'
 # TEST_USERNAME = 'peter_mertens'

@@ -30,8 +30,10 @@ Convention:
 
 IMPLEMENTED QUERIES
 -------------------
-- q_get_profile(username)
+- q_get_a_profile(username)
+- q_get_profiles()
 - q_save_a_profile(username)
+- q_set_a_scrape_flag(username, flag)
 
 """
 collection_name = 'profiles'
@@ -48,11 +50,17 @@ def setup_collection():  # Todo: add indexes
     pass
 
 
-def q_get_profile(username):
+def q_get_a_profile(username):
     collection = get_collection()
     q = {'username': username}
     doc = collection.find_one(q)
     return doc
+
+
+def q_get_profiles():
+    collection = get_collection()
+    cursor = collection.find()
+    return list(cursor)
 
 
 def q_save_a_profile(profile):
@@ -71,6 +79,7 @@ def q_save_a_profile(profile):
                       'verified': profile['verified'],
                       'background_image': profile['background_image'],
                       'avatar': profile['avatar'],
+                      'scrape_ok': 0
                       },
              '$push': {'timestamp': datetime.now(),
                        'followers': int(profile['followers']),
@@ -85,6 +94,14 @@ def q_save_a_profile(profile):
         raise
 
 
+def q_set_a_scrape_flag(username, flag):
+    collection = get_collection()
+    f = {'username': username}
+    u = {'$set': {'scrape_flag': flag}}
+    collection.update_one(f,u)
+
+
+
 if __name__ == '__main__':
     u = TEST_USERNAME
-    q_get_profile(u)
+    q_get_a_profile(u)

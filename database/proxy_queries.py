@@ -34,7 +34,6 @@ IMPLEMENTED QUERIES
 -------------------
 - q_get_proxies(q)
 - q_save_a_proxy(proxy)
-- q_save_proxies(proxies)
 - q_update_a_proxy_test(proxy_test)
 
 """
@@ -70,19 +69,12 @@ def q_save_a_proxy(proxy):
     d['delay'] = 999999
     d['blacklisted'] = True
     d['error_code'] = 0
+    d['n_blacklisted'] = 0
+    d['n_tested'] = 0
     try:
         collection.insert_one(d)
     except DuplicateKeyError as e:
         logger.error(f"Duplicate proxy: {proxy['ip']}:{proxy['port']}")
-
-
-def q_save_proxies(proxies):
-    collection = get_collection()
-    try:
-        collection.insert_many(proxies, ordered=False)
-    except BulkWriteError as e:
-        logger.error(f'Error insterting many proxies.')
-        logger.error(f'Error message: {e}')
 
 
 def q_update_a_proxy_test(proxy_test):
@@ -91,7 +83,9 @@ def q_update_a_proxy_test(proxy_test):
          'port': proxy_test['port']}
     u = {'$set': {'delay': proxy_test['delay'],
                   'blacklisted': proxy_test['blacklisted'],
-                  'error_code': proxy_test['error_code']}}
+                  'error_code': proxy_test['error_code']},
+         '$inc': {'n_blacklisted': int(proxy_test['blacklisted']),
+                  'n_tested': 1}}
     collection.update_one(f, u, upsert=True)
 
 
@@ -100,3 +94,7 @@ if __name__ == '__main__':
     # setup_collection()
     # proxy_test = {'ip': '1.1.1.1', 'port': '2332', 'delay': .03, 'blacklisted': False}
     # q_update_a_proxy_test(proxy_test)
+    # col =get_collection()
+    # for proxy in col.find():
+    #     col.update_one({'_id':proxy['_id']},
+    #                    {'$set': {'n_blacklisted': int(proxy['blacklisted']), 'n_tested': 1}})

@@ -22,6 +22,7 @@ def current_date(alt: str = False) -> [datetime.date, str]:
     return datetime.date.today()
 
 
+
 def dict_to_query(dictionary: dict) -> str:
     return urllib.parse.urlencode(dictionary)
 
