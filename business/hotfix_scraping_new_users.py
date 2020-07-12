@@ -11,15 +11,15 @@ from concurrent.futures import TimeoutError
 from datetime import datetime, timedelta
 from queue import Empty
 
+import pandas as pd
 from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
 
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
-from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS
 from database.proxy_facade import get_proxies, set_a_proxy_success_flag, reset_proxies_success_flag
 from database.proxy_facade import save_proxies
-from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles
-from database.twitter_facade import get_usernames, set_a_scrape_flag, reset_all_scrape_flags
+from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles, get_a_profile
+from database.twitter_facade import set_a_scrape_flag, reset_all_scrape_flags
 from tools.logger import logger
 from tools.utils import dt2str, str2d
 
@@ -27,15 +27,76 @@ from tools.utils import dt2str, str2d
 A collection of functions to control scraping and saving proxy servers, Twitter tweets and profiles
 """
 
-
 # See: https://www.cloudcity.io/blog/2019/02/27/things-i-wish-they-told-me-about-multiprocessing-in-python/
 
 ####################################################################################################################################################################################
-def scrape_users_tweets_profile(processes=10, max_delay=15, resume=True):
-    usernames_df = get_usernames()
-    if resume:
-        usernames_df = usernames_df[usernames_df['scrape_flag'] != 'END']
-        usernames_df = usernames_df[usernames_df['scrape_flag'] != 0]
+# Hotfix: Copy of scraping_controller, modified to scrape a list of new clients
+####################################################################################################################################################################################
+new_users_original = ['HarryMelis3',
+                      'JessikaSoors',
+                      'Filip_Bru',
+                      'HananeLlo',
+                      'ArbiterOfTweets',
+                      'Jong_NVA_1302',
+                      'Aya_Sabi',
+                      'JosDHaese',
+                      'DaanSchellemans',
+                      'ECardinael',
+                      'franckentheo',
+                      'JimmyKoppen',
+                      'Jongnva',
+                      'cauwelaert',
+                      'Jongvld',
+                      'JSbelgie',
+                      'JongGroen',
+                      'AnnDeCraemer',
+                      'Marliesvdwalle',
+                      'mamiracoli']
+
+new_users = ['HarryMelis3',
+
+             'Jong_NVA_1302',
+
+             'Jongnva',
+             'Jongvld',
+             'JSbelgie',
+             'JongGroen',
+             'AnnDeCraemer',
+             'Marliesvdwalle',
+             'mamiracoli']
+
+BEGIN_DATE = datetime(2020, 1, 1)
+END_DATE = datetime.today() - timedelta(days=14)
+TIME_DELTA = 14
+SCRAPE_WITH_PROXY = True
+SCRAPE_ONLY_MISSING_DATES = False
+
+
+####################################################################################################################################################################################
+
+def manualy_check_already_exists():
+    new_users_lower = [u.lower() for u in new_users]
+    print(new_users)
+    for username in new_users_lower.copy():
+        user_exist = get_a_profile(username)
+        if user_exist:
+            logger.error(f'New user exists: {username}')
+
+
+SCRAPE_TWEETS = 'XXX'
+SCRAPE_PROFILES = 'XXX'
+
+
+def scrape_new_users_tweets_profile(is_tweet=True, processes=25, max_delay=25, resume=False):  # Identical as scraping_controller
+    global SCRAPE_TWEETS, SCRAPE_PROFILES, new_users
+    SCRAPE_TWEETS = True if is_tweet else False
+    SCRAPE_PROFILES = False if is_tweet else True
+
+    # Check if username already exists
+    new_users = [u.lower() for u in new_users]
+    print(new_users)
+
+    usernames_df = pd.DataFrame(new_users, columns=['username'])
     logger.info(f'Scraping {len(usernames_df)} users. using {processes} processes/threads and proxies with max_delay {max_delay} sec.')
     proxy_queue = populate_proxy_queue(max_delay=max_delay)
     usernames_pq = [(username, proxy_queue) for username in usernames_df['username']]
@@ -44,8 +105,6 @@ def scrape_users_tweets_profile(processes=10, max_delay=15, resume=True):
     with mp.pool.ThreadPool(processes=processes) as pool:
         result = pool.starmap(scrape_manager, usernames_pq)
 
-
-# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def populate_proxy_queue(proxy_queue=None, max_delay=30):
     proxy_df = get_proxies(blacklisted=False, max_delay=max_delay, success=True)
@@ -60,14 +119,10 @@ def populate_proxy_queue(proxy_queue=None, max_delay=30):
     return proxy_queue
 
 
-# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 def scrape_manager(username, proxy_queue):
     if SCRAPE_PROFILES: scrape_a_user_profile(username, proxy_queue)
     if SCRAPE_TWEETS: scrape_a_user_tweets(username, proxy_queue)
 
-
-# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def scrape_a_user_profile(username, proxy_queue):
     # Todo: Multiprocess + proxyservers
@@ -79,6 +134,7 @@ def scrape_a_user_profile(username, proxy_queue):
         proxy = {'ip': ip, 'port': port}
     set_a_scrape_flag(username, 'START')
     profile_scraper = ProfileScraper(username)
+    if proxy: profile_scraper.proxy_server = proxy
     if proxy: profile_scraper.proxy_server = proxy
     profile_scraper.twint_hide_terminal_output = True
     profile_scraper.twint_show_stats = False
@@ -94,8 +150,6 @@ def scrape_a_user_profile(username, proxy_queue):
     proxy_queue.put((proxy['ip'], proxy['port']))
     set_a_proxy_success_flag(proxy, True)
 
-
-# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def scrape_a_user_tweets(username, proxy_queue):
     if proxy_queue.qsize() <= 1:  # Risk of double proxies when a thread put banck the proxy
@@ -207,7 +261,6 @@ def scrape_a_user_tweets(username, proxy_queue):
         set_a_scrape_flag(username, 'END')
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def _scrape_a_user_tweets(username, proxy=None, begin_date=str2d('2000-01-01'), end_date=str2d('2035-01-01')):
     tweet_scraper = TweetScraper(username, begin_date, end_date)
     if proxy: tweet_scraper.proxy_server = proxy
@@ -218,8 +271,6 @@ def _scrape_a_user_tweets(username, proxy=None, begin_date=str2d('2000-01-01'), 
     tweets_df = tweet_scraper.execute_scraping()
     return tweets_df
 
-
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def _determine_scrape_periods(username):
     # no need to scrape before join_date
@@ -234,7 +285,6 @@ def _determine_scrape_periods(username):
     return scrape_periods
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1):
     """
     Gets all the dates when 'username' has 'min_tweets' nr of tweets stored in the database.
@@ -259,7 +309,6 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
         return [(begin_date, end_date)]
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def _split_periods(periods):
     # Split the periods into parts with a maximal length of 'TIME_DELTA' days
     splitted_periods = []
@@ -276,7 +325,6 @@ def _split_periods(periods):
     return splitted_periods
 
 
-####################################################################################################################################################################################
 def scrape_proxies():
     logger.info('=' * 100)
     logger.info('Start scrapping Proxies')
@@ -298,10 +346,10 @@ def reset_scrape_flag():
     reset_all_scrape_flags()
 
 
-####################################################################################################################################################################################
-
 if __name__ == '__main__':
     pass
     # scrape_proxies()
     # scrape_a_user_profile('franckentheo')
-    scrape_users_tweets_profile()
+    # manualy_check_already_exists()
+    # scrape_new_users_tweets_profile(is_tweet=True)
+    reset_proxies_success_flag()

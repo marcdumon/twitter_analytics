@@ -3,14 +3,11 @@
 # src - proxy_queries.py
 # md
 # --------------------------------------------------------------------------------------------------------
-import sys
-from datetime import datetime
-from pprint import pprint
 
-from pymongo import MongoClient, ASCENDING, DESCENDING
-from pymongo.errors import DuplicateKeyError, BulkWriteError
+from pymongo import MongoClient, DESCENDING
+from pymongo.errors import DuplicateKeyError
 
-from config import DATABASE, TEST_USERNAME
+from config import DATABASE
 from tools.logger import logger
 
 """
@@ -106,8 +103,9 @@ def q_set_a_proxy_success_flag(proxy, success_flag):
 
 def q_reset_a_proxy_success_flag(proxy):
     collection = get_collection()
+    print('Doesn\'t reset the n_used and n_failed stats')
     f = {'ip': proxy['ip'], 'port': proxy['port']}
-    u = {'$set': {'success': True, 'n_used': 0, 'n_failed': 0}}
+    u = {'$set': {'success': True} }# 'n_used': 0, 'n_failed': 0}
     collection.update_one(f, u, upsert=True)
 
 

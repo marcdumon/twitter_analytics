@@ -21,6 +21,7 @@ Functions accept and return dataframes when suitable
 IMPLEMENTED FUNCTIONS
 ---------------------
 - get_join_date(username)
+- get_a_profile(username)
 - get_profiles()
 - get_nr_tweets_per_day(username, begin_date, end_date)
 - reset_all_scrape_flags()
@@ -125,6 +126,10 @@ def get_profiles():
     profiles_df = pd.DataFrame(profiles)
     return profiles_df
 
+def get_a_profile(username):
+    doc = q_get_a_profile(username)
+    return doc # Todo: Should return a list or df
+
 
 def get_usernames():
     profiles_df = get_profiles()
@@ -166,8 +171,9 @@ if __name__ == '__main__':
     sd = datetime(2011, 12, 31)
     ed = datetime(2012, 1, 1)
 
-    print(get_nr_tweets_per_day(u, sd, ed))
+    # print(get_nr_tweets_per_day(u, sd, ed))
     # get_join_date((u))
     # reset_all_scrape_flags()
     # set_a_scrape_flag('smienos', 10)
     # get_profiles()
+    print(get_a_profile('filip_bru'))

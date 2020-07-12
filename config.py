@@ -8,7 +8,9 @@ from datetime import datetime, timedelta
 DATABASE = 'twitter_database'
 
 # TWITTER SETTINGS
-DATA_TYPES = {'tweets': True, 'profiles': False}
+# DATA_TYPES = {'tweets': True, 'profiles': False}
+SCRAPE_PROFILES = True
+SCRAPE_TWEETS = False
 
 
 # BEGIN_DATE = datetime.today() - timedelta(days=2)
@@ -17,8 +19,7 @@ DATA_TYPES = {'tweets': True, 'profiles': False}
 # END_DATE = datetime(2012, 1, 1)
 BEGIN_DATE = datetime(2020, 1, 1)
 END_DATE = datetime.today() - timedelta(days=14)
-# END_DATE = datetime(2020, 1, 3)
-
+# END_DATE = datetime(2020, 1, 21)
 TIME_DELTA = 7
 SCRAPE_ONLY_MISSING_DATES = False
 
