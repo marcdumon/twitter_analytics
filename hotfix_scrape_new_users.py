@@ -3,8 +3,8 @@
 # src - hotfix_scrape_new_users.py
 # md
 # --------------------------------------------------------------------------------------------------------
-from business.hotfix_scraping_new_users import scrape_new_users_tweets_profile,manualy_check_already_exists
+from business.hotfix_scraping_new_users import scrape_new_users_tweets_profile
 
 if __name__ == '__main__':
-    manualy_check_already_exists()
+    # manualy_check_already_exists()
     scrape_new_users_tweets_profile(is_tweet=True)

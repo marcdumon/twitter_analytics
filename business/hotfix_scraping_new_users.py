@@ -32,30 +32,14 @@ A collection of functions to control scraping and saving proxy servers, Twitter 
 ####################################################################################################################################################################################
 # Hotfix: Copy of scraping_controller, modified to scrape a list of new clients
 ####################################################################################################################################################################################
-new_users_original = ['HarryMelis3',
-                      'JessikaSoors',
-                      'Filip_Bru',
-                      'HananeLlo',
-                      'ArbiterOfTweets',
-                      'Jong_NVA_1302',
-                      'Aya_Sabi',
-                      'JosDHaese',
-                      'DaanSchellemans',
-                      'ECardinael',
-                      'franckentheo',
-                      'JimmyKoppen',
-                      'Jongnva',
-                      'cauwelaert',
-                      'Jongvld',
-                      'JSbelgie',
-                      'JongGroen',
-                      'AnnDeCraemer',
-                      'Marliesvdwalle',
-                      'mamiracoli']
-
 new_users = ['HarryMelis3',
 
+             'HananeLlo',
+             'ArbiterOfTweets',
              'Jong_NVA_1302',
+             'Aya_Sabi',
+             'DaanSchellemans',
+             'ECardinael',
 
              'Jongnva',
              'Jongvld',
@@ -65,11 +49,11 @@ new_users = ['HarryMelis3',
              'Marliesvdwalle',
              'mamiracoli']
 
-BEGIN_DATE = datetime(2020, 1, 1)
+BEGIN_DATE = datetime(2012, 1, 1)
 END_DATE = datetime.today() - timedelta(days=14)
-TIME_DELTA = 14
+TIME_DELTA = 30
 SCRAPE_WITH_PROXY = True
-SCRAPE_ONLY_MISSING_DATES = False
+SCRAPE_ONLY_MISSING_DATES = True
 
 
 ####################################################################################################################################################################################
@@ -87,7 +71,7 @@ SCRAPE_TWEETS = 'XXX'
 SCRAPE_PROFILES = 'XXX'
 
 
-def scrape_new_users_tweets_profile(is_tweet=True, processes=25, max_delay=25, resume=False):  # Identical as scraping_controller
+def scrape_new_users_tweets_profile(is_tweet=True, processes=20, max_delay=25, resume=False):  # Identical as scraping_controller
     global SCRAPE_TWEETS, SCRAPE_PROFILES, new_users
     SCRAPE_TWEETS = True if is_tweet else False
     SCRAPE_PROFILES = False if is_tweet else True
