@@ -5,12 +5,11 @@
 # --------------------------------------------------------------------------------------------------------
 import sys
 from datetime import datetime
-from pprint import pprint
 
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 
-from config import DATABASE, TEST_USERNAME
+from config import DATABASE
 from tools.logger import logger
 
 """
@@ -83,9 +82,15 @@ def q_update_a_tweet(tweet):
     collection = get_collection()
     f = {'tweet_id': tweet['tweet_id']}
     u = {'$set': tweet}
-    result = collection.update_one(f, u, upsert=True)
-    logger.debug(f"Updated: {result.raw_result} - {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
-
+    try:
+        result = collection.update_one(f, u, upsert=True)
+        logger.debug(f"Updated: {result.raw_result} - {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
+    except DuplicateKeyError as e:
+        logger.error('*'*3000)
+        logger.error('tweet=')
+        logger.error((tweet))
+        logger.error(e)
+        logger.error('*'*3000)
 
 if __name__ == '__main__':
     # print(collection_name)

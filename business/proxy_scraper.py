@@ -3,29 +3,24 @@
 # src - proxy_scraper.py
 # md
 # --------------------------------------------------------------------------------------------------------
+
+import multiprocessing as mp
 import time
+from asyncio import TimeoutError, CancelledError
 from datetime import datetime
 
 import pandas as pd
 import requests
+from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
-from tools.logger import logger
-from tools.utils import set_pandas_display_options
-import sys
-import time
-import multiprocessing as mp
-from datetime import datetime
-from asyncio import TimeoutError, CancelledError
-from pathlib import Path
-
-from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError
-
 from business.twitter_scraper import TweetScraper
+from config import LOGGING_LEVEL
 from database.proxy_facade import get_proxies, save_a_proxy_test
 from tools.logger import logger
+from tools.utils import set_pandas_display_options
 
 set_pandas_display_options()
 
@@ -116,7 +111,7 @@ class ProxyScraper:
         ts = TweetScraper(username)
         ts.proxy_server = {'ip': ip, 'port': port}
         ts.twint_limit = limit
-        ts.twint_hide_terminal_output = True
+        ts.twint_hide_terminal_output = True if LOGGING_LEVEL != 'Debug' else False
 
         try:
             start_time = time.time()

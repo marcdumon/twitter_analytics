@@ -9,6 +9,7 @@ from pymongo import MongoClient
 
 from tools.logger import logger
 
+# collection_names = ['profiles', 'proxies']
 collection_names = ['profiles', 'proxies', 'tweets']
 
 source_database = 'twitter_database'

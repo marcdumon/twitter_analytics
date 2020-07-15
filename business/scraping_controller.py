@@ -15,8 +15,8 @@ from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
 
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
-from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS
-from database.proxy_facade import get_proxies, set_a_proxy_success_flag, reset_proxies_success_flag
+from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS, LOGGING_LEVEL
+from database.proxy_facade import get_proxies, set_a_proxy_scrape_success_flag, reset_proxies_scrape_success_flag
 from database.proxy_facade import save_proxies
 from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles
 from database.twitter_facade import get_usernames, set_a_scrape_flag, reset_all_scrape_flags
@@ -48,7 +48,7 @@ def scrape_users_tweets_profile(processes=10, max_delay=15, resume=True):
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def populate_proxy_queue(proxy_queue=None, max_delay=30):
-    proxy_df = get_proxies(blacklisted=False, max_delay=max_delay, success=True)
+    proxy_df = get_proxies(blacklisted=False, max_delay=max_delay, scrape_success=True)
     # Shuffle the proxies otherwise always same order
     proxy_df = proxy_df.sample(frac=1., replace=False)
     if not proxy_queue:  # New queue
@@ -80,7 +80,7 @@ def scrape_a_user_profile(username, proxy_queue):
     set_a_scrape_flag(username, 'START')
     profile_scraper = ProfileScraper(username)
     if proxy: profile_scraper.proxy_server = proxy
-    profile_scraper.twint_hide_terminal_output = True
+    profile_scraper.twint_hide_terminal_output = True if LOGGING_LEVEL != 'Debug' else False
     profile_scraper.twint_show_stats = False
     profile_scraper.twint_show_count = False
     logger.info(f'Start scraping profile for: {username}  with proxy {proxy}')
@@ -92,7 +92,7 @@ def scrape_a_user_profile(username, proxy_queue):
     # Todo: Exceptions
     logger.warning(f'Put back proxy {proxy}')
     proxy_queue.put((proxy['ip'], proxy['port']))
-    set_a_proxy_success_flag(proxy, True)
+    set_a_proxy_scrape_success_flag(proxy, True)
 
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                     set_a_scrape_flag(username, 'BUSSY')
                 logger.warning(f'Put back proxy {proxy}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, True)
+                set_a_proxy_scrape_success_flag(proxy, True)
                 success = True
             # Todo: put exception code in function
             except ValueError as e:
@@ -135,7 +135,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 time.sleep(10 * fail_counter)
                 logger.error(f'Put back proxy {proxy} after ValueError Error for username {username}. {bd} - {ed}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, False)
+                set_a_proxy_scrape_success_flag(proxy, False)
                 success = False
             except ServerDisconnectedError as e:
                 set_a_scrape_flag(username, 'ServerDisconnectedError')
@@ -145,7 +145,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 time.sleep(10 * fail_counter)
                 logger.error(f'Put back proxy {proxy} after ServerDisconnectedError Error for username {username}. {bd} - {ed}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, False)
+                set_a_proxy_scrape_success_flag(proxy, False)
                 success = False
             except ClientOSError as e:
                 set_a_scrape_flag(username, 'ClientOSError')
@@ -155,7 +155,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 time.sleep(10 * fail_counter)
                 logger.error(f'Put back proxy {proxy} after ClientOSError Error for username {username}. {bd} - {ed}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, False)
+                set_a_proxy_scrape_success_flag(proxy, False)
                 success = False
             except TimeoutError as e:
                 set_a_scrape_flag(username, 'TimeoutError')
@@ -165,7 +165,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 time.sleep(10 * fail_counter)
                 logger.error(f'Put back proxy {proxy} after TimeoutError Error for username {username}. {bd} - {ed}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, False)
+                set_a_proxy_scrape_success_flag(proxy, False)
                 success = False
             except ClientHttpProxyError as e:
                 set_a_scrape_flag(username, 'ClientHttpProxyError')
@@ -175,7 +175,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 time.sleep(10 * fail_counter)
                 logger.error(f'Put back proxy {proxy} after ClientHttpProxyError Error for username {username}. {bd} - {ed}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, False)
+                set_a_proxy_scrape_success_flag(proxy, False)
                 success = False
             except IndexError as e:
                 set_a_scrape_flag(username, 'IndexError')
@@ -185,7 +185,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 time.sleep(10 * fail_counter)
                 logger.error(f'Put back proxy {proxy} after IndexError Error for username {username}. {bd} - {ed}')
                 proxy_queue.put((proxy['ip'], proxy['port']))
-                set_a_proxy_success_flag(proxy, False)
+                set_a_proxy_scrape_success_flag(proxy, False)
                 success = False
             except Empty as e:  # Queue emprt
                 set_a_scrape_flag(username, 'Empty')
@@ -211,7 +211,7 @@ def scrape_a_user_tweets(username, proxy_queue):
 def _scrape_a_user_tweets(username, proxy=None, begin_date=str2d('2000-01-01'), end_date=str2d('2035-01-01')):
     tweet_scraper = TweetScraper(username, begin_date, end_date)
     if proxy: tweet_scraper.proxy_server = proxy
-    tweet_scraper.twint_hide_terminal_output = True
+    tweet_scraper.twint_hide_terminal_output = True if LOGGING_LEVEL != 'Debug' else False
     tweet_scraper.twint_show_stats = False
     tweet_scraper.twint_show_count = False
 
@@ -291,7 +291,7 @@ def scrape_proxies():
 
 
 def reset_proxy_servers():
-    reset_proxies_success_flag()
+    reset_proxies_scrape_success_flag()
 
 
 def reset_scrape_flag():
