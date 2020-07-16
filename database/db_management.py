@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------------------------------------
 # 2020/07/15
-# src - db_management_queries.py
+# src - db_management.py
 # md
 # --------------------------------------------------------------------------------------------------------
 
@@ -19,24 +19,35 @@ Convention:
 - match         m
 - group:        g
 
-IMPLEMENTED QUERIES
--------------------
+IMPLEMENTED QUERIES AND FUNCTIONS
+---------------------------------
+
 - q_add_field(collection_name, field_name, value)
 - q_remove_field(collection_name, field_name)
 - q_rename_field(collection_name, old_field_name, new_field_name)
+
 # - q_copy_field
 """
+
 from pymongo import MongoClient
 
 from config import DATABASE
 from tools.logger import logger
 
 
-def get_collection(collection_name):
-    client = MongoClient()
-    db = client[DATABASE]
+# Todo: Refactor: put everything in a class. DbManagement.copy_collection().xxx
+
+def get_collection(collection_name, db_name=DATABASE):
+    db = get_database()[db_name]
     collection = db[collection_name]
     return collection
+
+
+def get_database(db_name=DATABASE):
+    client = MongoClient()
+    db = client[db_name]
+    return db
+
 
 
 def q_remove_field(collection_name, field_name):
@@ -74,4 +85,5 @@ def q_add_field(collection_name, field_name, value=None):
 if __name__ == '__main__':
     # q_remove_field('proxies', 'xxx')
     # q_copy_field('proxies', 'delay', 'xxx')
-    q_add_field('proxies', 'scrape_n_failed_total', 0)
+    # q_add_field('proxies', 'scrape_n_failed_total', 0)
+    backup_database()

@@ -3,8 +3,12 @@
 # src - hotfix_scrape_new_users.py
 # md
 # --------------------------------------------------------------------------------------------------------
-from business.hotfix_scraping_new_users import scrape_new_users_tweets_profile
+
+from business.scraping_controller import scrape_list_users_tweets, manualy_check_already_exists
 
 if __name__ == '__main__':
-    # manualy_check_already_exists()
-    scrape_new_users_tweets_profile(is_tweet=True)
+    usernames = ['BeMilInterests']
+    manualy_check_already_exists(usernames)
+
+
+    scrape_list_users_tweets(processes=len(usernames)+1, max_delay=30, resume=False, usernames=['BeMilInterests'])

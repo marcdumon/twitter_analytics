@@ -3,6 +3,7 @@
 # src - proxy_queries.py
 # md
 # --------------------------------------------------------------------------------------------------------
+from datetime import datetime
 
 from pymongo import MongoClient, DESCENDING
 from pymongo.errors import DuplicateKeyError
@@ -95,7 +96,8 @@ def q_update_a_proxy_test(proxy_test):
 def q_set_a_proxy_scrape_success_flag(proxy, scrape_success_flag):
     collection = get_collection()
     f = {'ip': proxy['ip'], 'port': proxy['port']}
-    u = {'$set': {'scrape_success': scrape_success_flag}}
+    u = {'$set': {'scrape_success': scrape_success_flag,
+                  'last_update':datetime.now()}}
     if scrape_success_flag:
         u['$inc'] = {'scrape_n_used': 1}
         u['$inc'] = {'scrape_n_used_total': 1}
@@ -107,11 +109,16 @@ def q_set_a_proxy_scrape_success_flag(proxy, scrape_success_flag):
 
 def q_reset_a_proxy_scrape_success_flag(proxy):
     collection = get_collection()
-
     f = {'ip': proxy['ip'], 'port': proxy['port']}
-    u = {'$set': {'scrape_success': True}}  # 'n_used': 0, 'n_failed': 0}
+    u = {'$set': {'scrape_success': True, 'scrape_n_used': 0, 'scrape_n_failed': 0}}
     collection.update_one(f, u, upsert=True)
 
+
+def q_temp():
+    collection = get_collection()
+    f= {'delay': 0}
+    u={'$set':{'delay':999999}}
+    collection.update_many(f, u, upsert=True)
 
 if __name__ == '__main__':
     pass
@@ -122,3 +129,4 @@ if __name__ == '__main__':
     # for proxy in col.find():
     #     col.update_one({'_id':proxy['_id']},
     #                    {'$set': {'test_n_blacklisted': int(proxy['blacklisted']), 'test_n_tested': 1}})
+    q_temp()

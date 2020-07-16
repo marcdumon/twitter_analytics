@@ -29,25 +29,14 @@ A collection of functions to control scraping and saving proxy servers, Twitter 
 
 # See: https://www.cloudcity.io/blog/2019/02/27/things-i-wish-they-told-me-about-multiprocessing-in-python/
 
+
+# OBSOLETE>> REPLACED BY scrape_one_user()
+
+
 ####################################################################################################################################################################################
 # Hotfix: Copy of scraping_controller, modified to scrape a list of new clients
 ####################################################################################################################################################################################
-new_users = ['HarryMelis3',
-
-             'HananeLlo',
-             'ArbiterOfTweets',
-             'Jong_NVA_1302',
-             'Aya_Sabi',
-             'DaanSchellemans',
-             'ECardinael',
-
-             'Jongnva',
-             'Jongvld',
-             'JSbelgie',
-             'JongGroen',
-             'AnnDeCraemer',
-             'Marliesvdwalle',
-             'mamiracoli']
+new_users = ['BeMilInterests']
 
 BEGIN_DATE = datetime(2012, 1, 1)
 END_DATE = datetime.today() - timedelta(days=14)
@@ -67,11 +56,12 @@ def manualy_check_already_exists():
             logger.error(f'New user exists: {username}')
 
 
-SCRAPE_TWEETS = 'XXX'
-SCRAPE_PROFILES = 'XXX'
+
+# SCRAPE_TWEETS = 'XXX'
+# SCRAPE_PROFILES = 'XXX'
 
 
-def scrape_new_users_tweets_profile(is_tweet=True, processes=20, max_delay=25, resume=False):  # Identical as scraping_controller
+def scrape_new_users_tweets_profile(is_tweet=True, processes=1, max_delay=30, resume=False):  # Identical as scraping_controller
     global SCRAPE_TWEETS, SCRAPE_PROFILES, new_users
     SCRAPE_TWEETS = True if is_tweet else False
     SCRAPE_PROFILES = False if is_tweet else True
@@ -85,8 +75,8 @@ def scrape_new_users_tweets_profile(is_tweet=True, processes=20, max_delay=25, r
     proxy_queue = populate_proxy_queue(max_delay=max_delay)
     usernames_pq = [(username, proxy_queue) for username in usernames_df['username']]
     # Todo: What's better, multiprocess or multi threads ?
-    # with mp.Pool(processes=2) as pool:
-    with mp.pool.ThreadPool(processes=processes) as pool:
+    with mp.Pool(processes=processes) as pool:
+    # with mp.pool.ThreadPool(processes=processes) as pool:
         result = pool.starmap(scrape_manager, usernames_pq)
 
 
@@ -146,7 +136,7 @@ def scrape_a_user_tweets(username, proxy_queue):
         fail_counter = 0
         success = False
         bd, ed = dt2str(begin_date), dt2str(end_date)
-        while (not scrape_success) and (fail_counter < 5):
+        while (not success) and (fail_counter < 5):
             proxy = {}
             if SCRAPE_WITH_PROXY:
                 # Todo: proxy_queue already created, now descide to use it or not?
@@ -275,9 +265,11 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
     Returns a list of tuples with begin and end date of the period when the 'username' has less or equal amounts of tweets as 'min_tweets' stored in the database.
     We split the periods that are longer than TIME_DELTA.
     """
+
     # A bit hacky !!! but it works
-    days_with_tweets = get_nr_tweets_per_day(username, begin_date, end_date)  # Can return empty ex elsampe sd=datetime(2011,12,31) ed=datetime(2012,1,1)
-    if not days_with_tweets.empty:  # Can return empty ex elsampe sd=datetime(2011,12,31) ed=datetime(2012,1,1)
+    # Todo: Refactor: use df.query() here?
+    days_with_tweets = get_nr_tweets_per_day(username, begin_date, end_date)
+    if not days_with_tweets.empty:
         days_with_tweets = days_with_tweets[days_with_tweets['nr_tweets'] >= min_tweets]
         days_with_tweets = [d.to_pydatetime() for d in days_with_tweets['date'] if begin_date < d.to_pydatetime() < end_date]
         # add begin_date at the beginning en end_date + 1 day at the end

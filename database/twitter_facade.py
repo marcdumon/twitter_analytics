@@ -144,8 +144,8 @@ def get_join_date(username):
     except TypeError as e:
         logger.error(f'Couldn\'t get the join_date for user {username}')
         logger.error(f'Error message:{e}')
-        logger.error(f'Returning join_date = 1900-01-01')
-        join_date = '1900-01-01'
+        logger.error(f'Returning join_date = 2010-01-01')
+        join_date = '2010-01-01'
     join_date = datetime.strptime(join_date, '%Y-%m-%d')
     return join_date
 
@@ -155,7 +155,7 @@ def get_nr_tweets_per_day(username, start_date=datetime(2000, 1, 1), end_date=da
     return pd.DataFrame(nr_tweets_per_day)
 
 
-def reset_all_scrape_flags():
+def reset_all_scrape_flags(): # Todo: Refactor: use update_many in query!
     for profile in q_get_profiles():
         q_set_a_scrape_flag(profile['username'], 0)
 
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     # print(get_nr_tweets_per_day(u, sd, ed))
     # get_join_date((u))
-    # reset_all_scrape_flags()
+    reset_all_scrape_flags()
     # set_a_scrape_flag('smienos', 10)
     # get_profiles()
-    print(get_a_profile('filip_bru'))
+    # print(get_a_profile('filip_bru'))

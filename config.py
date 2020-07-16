@@ -3,25 +3,25 @@
 # Twitter_Scraping - config.py
 # md
 # --------------------------------------------------------------------------------------------------------
-from datetime import datetime, timedelta
+from datetime import datetime
 
-DATABASE = 'twitter_database'
+DATABASE = 'twitter_database_xxx'
 
 # TWITTER SETTINGS
 # DATA_TYPES = {'tweets': True, 'profiles': False}
-SCRAPE_PROFILES = False
-SCRAPE_TWEETS = True
+SCRAPE_PROFILES = True
+SCRAPE_TWEETS = False
 
 
-BEGIN_DATE = datetime.today() - timedelta(days=14)
-END_DATE = datetime.today() - timedelta(days=7)
-# END_DATE = datetime.today()
-# BEGIN_DATE = datetime(1900, 1, 1)
+# BEGIN_DATE = datetime.today() - timedelta(days=7)
+# END_DATE = datetime.today() - timedelta(days=0)
+END_DATE = datetime.today()
+BEGIN_DATE = datetime(1900, 1, 1)
 # END_DATE = datetime(2012, 1, 1)
 # BEGIN_DATE = datetime(2020, 1, 1)
 # END_DATE = datetime.today() - timedelta(days=14)
 # END_DATE = datetime(2020, 1, 21)
-TIME_DELTA = 7
+TIME_DELTA = 360
 SCRAPE_ONLY_MISSING_DATES = False
 
 SCRAPE_WITH_PROXY = True
@@ -30,8 +30,8 @@ SCRAPE_WITH_PROXY = True
 SCRAPE_PROXIES = False
 PROXIES_DOWNLOAD_SITES = {'free_proxy_list': True, 'hide_my_name': True}
 
-# LOGGING_LEVEL = 'Debug'
-LOGGING_LEVEL = 'Info'
+LOGGING_LEVEL = 'Debug'
+# LOGGING_LEVEL = 'Info'
 
 WORDCLOUD_BLACKLIST = ['dag', 'mens', 'jaar', 'uur', 'tweet', 'video', 'politiekelent']
 

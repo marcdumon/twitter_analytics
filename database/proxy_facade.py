@@ -47,7 +47,7 @@ def save_proxies(proxies_df):
         q_save_a_proxy(proxy)
 
 
-def set_proxies(delay=0, blacklisted=False, error_code=-1):
+def set_proxies(delay=999999, blacklisted=False, error_code=-1): # Todo: Name is not clear and use update_many in the query iso loop
     for proxy in q_get_proxies({}):
         proxy_test = proxy
         proxy_test['delay'] = delay
@@ -60,7 +60,7 @@ def set_a_proxy_scrape_success_flag(proxy, scrape_success_flag):
     q_set_a_proxy_scrape_success_flag(proxy, scrape_success_flag)
 
 
-def reset_proxies_scrape_success_flag():
+def reset_proxies_scrape_success_flag(): # todo: Refactor: Use update_multi iso looping
     for proxy in q_get_proxies({}):
         proxy = {'ip': proxy['ip'], 'port': proxy['port']}
         q_reset_a_proxy_scrape_success_flag(proxy)

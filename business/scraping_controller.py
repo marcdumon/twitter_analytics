@@ -11,6 +11,7 @@ from concurrent.futures import TimeoutError
 from datetime import datetime, timedelta
 from queue import Empty
 
+import pandas as pd
 from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
 
 from business.proxy_scraper import ProxyScraper
@@ -18,7 +19,7 @@ from business.twitter_scraper import TweetScraper, ProfileScraper
 from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS, LOGGING_LEVEL
 from database.proxy_facade import get_proxies, set_a_proxy_scrape_success_flag, reset_proxies_scrape_success_flag
 from database.proxy_facade import save_proxies
-from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles
+from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles, get_a_profile
 from database.twitter_facade import get_usernames, set_a_scrape_flag, reset_all_scrape_flags
 from tools.logger import logger
 from tools.utils import dt2str, str2d
@@ -31,17 +32,44 @@ A collection of functions to control scraping and saving proxy servers, Twitter 
 # See: https://www.cloudcity.io/blog/2019/02/27/things-i-wish-they-told-me-about-multiprocessing-in-python/
 
 ####################################################################################################################################################################################
-def scrape_users_tweets_profile(processes=10, max_delay=15, resume=True):
+
+
+def manualy_check_already_exists(usernames): # Todo: Refactor
+    new_users_lower = [u.lower() for u in usernames]
+
+    for username in new_users_lower.copy():
+        user_exist = get_a_profile(username)
+        if user_exist:
+            logger.error(f'New user exists: {username}')
+
+
+
+def scrape_list_users_tweets(processes=1, max_delay=15, resume=False, usernames=None):
+    usernames_df = pd.DataFrame(usernames, columns=['username'])
+    if resume:
+        usernames_df = usernames_df[usernames_df['scrape_flag'] != 'END']
+        usernames_df = usernames_df[usernames_df['scrape_flag'] != 0]
+    logger.info(f'Scraping {len(usernames_df)} users. using {processes} processes/threads and proxies with max_delay {max_delay} sec.')
+    proxy_queue = populate_proxy_queue(max_delay=max_delay)
+    usernames_pq = [(username.lower(), proxy_queue) for username in usernames_df['username']]
+    # Todo: What's better, multiprocess or multi threads ?
+    with mp.Pool(processes=processes) as pool:
+    # with mp.pool.ThreadPool(processes=processes) as pool:
+        result = pool.starmap(scrape_manager, usernames_pq)
+
+
+
+def scrape_users_tweets_profile(processes=10, max_delay=15, resume=False):
     usernames_df = get_usernames()
     if resume:
         usernames_df = usernames_df[usernames_df['scrape_flag'] != 'END']
         usernames_df = usernames_df[usernames_df['scrape_flag'] != 0]
     logger.info(f'Scraping {len(usernames_df)} users. using {processes} processes/threads and proxies with max_delay {max_delay} sec.')
     proxy_queue = populate_proxy_queue(max_delay=max_delay)
-    usernames_pq = [(username, proxy_queue) for username in usernames_df['username']]
+    usernames_pq = [(username.lower(), proxy_queue) for username in usernames_df['username']]
     # Todo: What's better, multiprocess or multi threads ?
-    # with mp.Pool(processes=2) as pool:
-    with mp.pool.ThreadPool(processes=processes) as pool:
+    with mp.Pool(processes=processes) as pool:
+    # with mp.pool.ThreadPool(processes=processes) as pool:
         result = pool.starmap(scrape_manager, usernames_pq)
 
 
@@ -242,6 +270,7 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
     We split the periods that are longer than TIME_DELTA.
     """
     # A bit hacky !!! but it works
+    # Todo: Refactor: use df.query() here?
     days_with_tweets = get_nr_tweets_per_day(username, begin_date, end_date)  # Can return empty ex elsampe sd=datetime(2011,12,31) ed=datetime(2012,1,1)
     if not days_with_tweets.empty:  # Can return empty ex elsampe sd=datetime(2011,12,31) ed=datetime(2012,1,1)
         days_with_tweets = days_with_tweets[days_with_tweets['nr_tweets'] >= min_tweets]
@@ -304,4 +333,5 @@ if __name__ == '__main__':
     pass
     # scrape_proxies()
     # scrape_a_user_profile('franckentheo')
-    scrape_users_tweets_profile()
+    # scrape_users_tweets_profile()
+    reset_proxy_servers()
