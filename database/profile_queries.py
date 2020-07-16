@@ -6,9 +6,10 @@
 import sys
 from datetime import datetime
 
-from pymongo import MongoClient, ASCENDING
+from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 
-from config import DATABASE, TEST_USERNAME
+from config import DATABASE
 from tools.logger import logger
 
 """
@@ -88,7 +89,14 @@ def q_save_a_profile(profile):
                        'tweets': int(profile['tweets']),
                        'media': int(profile['media']),
                        }}
-        collection.update_one(f, u, upsert=True)
+        try:
+            collection.update_one(f, u, upsert=True)
+        except DuplicateKeyError as e:
+            logger.error('*' * 3000)
+            logger.error('profile=')
+            logger.error((profile))
+            logger.error(e)
+            logger.error('*' * 3000)
     except:
         logger.error(f'Unknown error: {sys.exc_info()[0]}')
         raise
@@ -103,5 +111,6 @@ def q_set_a_scrape_flag(username, flag):
 
 
 if __name__ == '__main__':
-    u = TEST_USERNAME
-    q_get_a_profile(u)
+    u = 'franckentheo'
+    p=q_get_a_profile(u)
+    print(p['join_date'])

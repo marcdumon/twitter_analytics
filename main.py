@@ -9,7 +9,7 @@ from business.scraping_controller import scrape_users_tweets_profile, reset_prox
 # Todo: use arguments to control parameters
 # from config import SCRAPE_PROFILES, SCRAPE_TWEETS
 
-reset_proxies = False
+reset_proxies = True
 reset_flags = True
 resume = not reset_flags
 processes = 30
