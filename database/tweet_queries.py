@@ -9,7 +9,7 @@ from datetime import datetime
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 
-from config import DATABASE
+from database.control_facade import SystemCfg
 from tools.logger import logger
 
 """
@@ -35,13 +35,14 @@ IMPLEMENTED QUERIES
 - q_save_a_tweet(tweet)
 - q_update_a_tweet(tweet)
 """
-
+system_cfg = SystemCfg()
+database = system_cfg.database
 collection_name = 'tweets'
 
 
 def get_collection():
     client = MongoClient()
-    db = client[DATABASE]
+    db = client[database]
     collection = db[collection_name]
     return collection
 

@@ -6,15 +6,20 @@
 import logging
 import coloredlogs
 
-from config import LOGGING_LEVEL
+from database.control_facade import SystemCfg
 
-if LOGGING_LEVEL == 'Debug':
+system_cfg=SystemCfg()
+
+loging_level=system_cfg.logging_level
+
+
+if loging_level == 'Debug':
     level = logging.DEBUG
-elif LOGGING_LEVEL == 'Info':
+elif loging_level == 'Info':
     level = logging.INFO
-elif LOGGING_LEVEL=='Warning':
+elif loging_level== 'Warning':
     level = logging.WARNING
-elif LOGGING_LEVEL=='Error':
+elif loging_level== 'Error':
     level = logging.ERROR
 else:
     level = logging.NOTSET

@@ -8,7 +8,7 @@ from datetime import datetime
 from pymongo import MongoClient, DESCENDING
 from pymongo.errors import DuplicateKeyError
 
-from config import DATABASE
+from database.control_facade import SystemCfg
 from tools.logger import logger
 
 """
@@ -36,13 +36,14 @@ IMPLEMENTED QUERIES
 - q_reset_a_proxy_scrape_success_flag(proxy)
 - q_set_a_proxy_scrape_success_flag(proxy, scrape_success_flag)
 """
-
+system_cfg = SystemCfg()
+database = system_cfg.database
 collection_name = 'proxies'
 
 
 def get_collection():  # Todo: same function in many modules. Put in tools?
     client = MongoClient()
-    db = client[DATABASE]
+    db = client[database]
     collection = db[collection_name]
     return collection
 

@@ -16,7 +16,8 @@ from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
 
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
-from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS, LOGGING_LEVEL
+# from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS, LOGGING_LEVEL
+from database.control_facade import SystemCfg,Scraping_cfg
 from database.proxy_facade import get_proxies, set_a_proxy_scrape_success_flag, reset_proxies_scrape_success_flag
 from database.proxy_facade import save_proxies
 from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles, get_a_profile
@@ -33,6 +34,8 @@ A collection of functions to control scraping and saving proxy servers, Twitter 
 
 ####################################################################################################################################################################################
 
+system_cfg=SystemCfg()
+scraping_cfg=Scraping_cfg()
 
 def manualy_check_already_exists(usernames): # Todo: Refactor
     new_users_lower = [u.lower() for u in usernames]
@@ -41,6 +44,7 @@ def manualy_check_already_exists(usernames): # Todo: Refactor
         user_exist = get_a_profile(username)
         if user_exist:
             logger.error(f'New user exists: {username}')
+
 
 
 
@@ -91,8 +95,8 @@ def populate_proxy_queue(proxy_queue=None, max_delay=30):
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 def scrape_manager(username, proxy_queue):
-    if SCRAPE_PROFILES: scrape_a_user_profile(username, proxy_queue)
-    if SCRAPE_TWEETS: scrape_a_user_tweets(username, proxy_queue)
+    if scraping_cfg.profiles: scrape_a_user_profile(username, proxy_queue)
+    if scraping_cfg.tweets: scrape_a_user_tweets(username, proxy_queue)
 
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,7 +104,7 @@ def scrape_manager(username, proxy_queue):
 def scrape_a_user_profile(username, proxy_queue):
     # Todo: Multiprocess + proxyservers
     proxy = {}
-    if SCRAPE_WITH_PROXY:
+    if scraping_cfg.use_proxy:
         # Todo: proxy_queue already created, now descide to use it or not?
         logger.info(f'Len proxy queue = {proxy_queue.qsize()}')
         ip, port = proxy_queue.get()
@@ -108,7 +112,7 @@ def scrape_a_user_profile(username, proxy_queue):
     set_a_scrape_flag(username, 'START')
     profile_scraper = ProfileScraper(username)
     if proxy: profile_scraper.proxy_server = proxy
-    profile_scraper.twint_hide_terminal_output = True if LOGGING_LEVEL != 'Debug' else False
+    profile_scraper.twint_hide_terminal_output = True if system_cfg.logging_level != 'Debug' else False
     profile_scraper.twint_show_stats = False
     profile_scraper.twint_show_count = False
     logger.info(f'Start scraping profile for: {username}  with proxy {proxy}')
@@ -138,7 +142,7 @@ def scrape_a_user_tweets(username, proxy_queue):
         bd, ed = dt2str(begin_date), dt2str(end_date)
         while (not success) and (fail_counter < 5):
             proxy = {}
-            if SCRAPE_WITH_PROXY:
+            if scraping_cfg.use_proxy:
                 # Todo: proxy_queue already created, now descide to use it or not?
                 logger.info(f'Len proxy queue = {proxy_queue.qsize()}')
                 ip, port = proxy_queue.get()
@@ -239,7 +243,7 @@ def scrape_a_user_tweets(username, proxy_queue):
 def _scrape_a_user_tweets(username, proxy=None, begin_date=str2d('2000-01-01'), end_date=str2d('2035-01-01')):
     tweet_scraper = TweetScraper(username, begin_date, end_date)
     if proxy: tweet_scraper.proxy_server = proxy
-    tweet_scraper.twint_hide_terminal_output = True if LOGGING_LEVEL != 'Debug' else False
+    tweet_scraper.twint_hide_terminal_output = True if system_cfg.logging_level != 'Debug' else False
     tweet_scraper.twint_show_stats = False
     tweet_scraper.twint_show_count = False
 
@@ -252,9 +256,9 @@ def _scrape_a_user_tweets(username, proxy=None, begin_date=str2d('2000-01-01'), 
 def _determine_scrape_periods(username):
     # no need to scrape before join_date
     join_date = get_join_date(username)
-    begin_date, end_date = max(BEGIN_DATE, join_date), min(END_DATE, datetime.today())
+    begin_date, end_date = max(scraping_cfg.begin, join_date), min(scraping_cfg.end, datetime.today())
     # no need to scrape same dates again
-    if SCRAPE_ONLY_MISSING_DATES:
+    if scraping_cfg.missing_dates:
         scrape_periods = _get_periods_without_min_tweets(username, begin_date=begin_date, end_date=end_date, min_tweets=1)
     else:
         scrape_periods = [(begin_date, end_date)]
@@ -276,7 +280,7 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
         days_with_tweets = days_with_tweets[days_with_tweets['nr_tweets'] >= min_tweets]
         days_with_tweets = [d.to_pydatetime() for d in days_with_tweets['date'] if begin_date < d.to_pydatetime() < end_date]
         # add begin_date at the beginning en end_date + 1 day at the end
-        days_with_tweets.insert(0, begin_date - timedelta(days=1))  # begin_date - 1 day because we'll add a day when creating the dateranges
+        days_with_tweets.insert(0, begin_date - timedelta(days=1))  # begin_date - 1 day because we'loging_level add a day when creating the dateranges
         days_with_tweets.append((end_date + timedelta(days=1)))
 
         # Create the periods without min_tweets amount of saved tweets
@@ -291,16 +295,17 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def _split_periods(periods):
     # Split the periods into parts with a maximal length of 'TIME_DELTA' days
+    td=scraping_cfg.time_delta
     splitted_periods = []
     for b, e in periods:
-        if e - b <= timedelta(days=TIME_DELTA):
+        if e - b <= timedelta(days=td):
             splitted_periods.append((b, e))
         else:
-            while e - b >= timedelta(days=TIME_DELTA):
-                splitted_periods.append((b, b + timedelta(days=TIME_DELTA - 1)))
-                b = b + timedelta(days=TIME_DELTA)
+            while e - b >= timedelta(days=scraping_cfg.time_delta):
+                splitted_periods.append((b, b + timedelta(days=td - 1)))
+                b = b + timedelta(days=td)
                 # The last part of the splitting
-                if e - b < timedelta(TIME_DELTA):
+                if e - b < timedelta(td):
                     splitted_periods.append((b, e))
     return splitted_periods
 

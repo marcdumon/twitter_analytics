@@ -9,7 +9,7 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 
-from config import DATABASE
+from database.control_facade import SystemCfg
 from tools.logger import logger
 
 """
@@ -37,12 +37,14 @@ IMPLEMENTED QUERIES
 - q_set_a_scrape_flag(username, flag)
 
 """
+system_cfg = SystemCfg()
+database = system_cfg.database
 collection_name = 'profiles'
 
 
 def get_collection():
     client = MongoClient()
-    db = client[DATABASE]
+    db = client[database]
     collection = db[collection_name]
     return collection
 
@@ -106,11 +108,10 @@ def q_set_a_scrape_flag(username, flag):
     collection = get_collection()
     f = {'username': username}
     u = {'$set': {'scrape_flag': flag}}
-    collection.update_one(f,u)
-
+    collection.update_one(f, u)
 
 
 if __name__ == '__main__':
     u = 'franckentheo'
-    p=q_get_a_profile(u)
+    p = q_get_a_profile(u)
     print(p['join_date'])

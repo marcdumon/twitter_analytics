@@ -7,8 +7,8 @@
 from business.scraping_controller import scrape_list_users_tweets, manualy_check_already_exists
 
 if __name__ == '__main__':
-    usernames = ['BeMilInterests']
+    usernames = ['vanranstmarc']
     manualy_check_already_exists(usernames)
 
 
-    scrape_list_users_tweets(processes=len(usernames)+1, max_delay=30, resume=False, usernames=['BeMilInterests'])
+    scrape_list_users_tweets(processes=len(usernames)+1, max_delay=30, resume=False, usernames=usernames)

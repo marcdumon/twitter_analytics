@@ -273,7 +273,7 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
         days_with_tweets = days_with_tweets[days_with_tweets['nr_tweets'] >= min_tweets]
         days_with_tweets = [d.to_pydatetime() for d in days_with_tweets['date'] if begin_date < d.to_pydatetime() < end_date]
         # add begin_date at the beginning en end_date + 1 day at the end
-        days_with_tweets.insert(0, begin_date - timedelta(days=1))  # begin_date - 1 day because we'll add a day when creating the dateranges
+        days_with_tweets.insert(0, begin_date - timedelta(days=1))  # begin_date - 1 day because we'loging_level add a day when creating the dateranges
         days_with_tweets.append((end_date + timedelta(days=1)))
 
         # Create the periods without min_tweets amount of saved tweets

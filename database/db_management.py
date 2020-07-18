@@ -31,19 +31,22 @@ IMPLEMENTED QUERIES AND FUNCTIONS
 
 from pymongo import MongoClient
 
-from config import DATABASE
+# from config import DATABASE
+from database.control_facade import Scraping_cfg, SystemCfg
 from tools.logger import logger
+
+system_cfg=SystemCfg()
 
 
 # Todo: Refactor: put everything in a class. DbManagement.copy_collection().xxx
 
-def get_collection(collection_name, db_name=DATABASE):
+def get_collection(collection_name, db_name=system_cfg.database):
     db = get_database()[db_name]
     collection = db[collection_name]
     return collection
 
 
-def get_database(db_name=DATABASE):
+def get_database(db_name=system_cfg.database):
     client = MongoClient()
     db = client[db_name]
     return db
@@ -83,7 +86,7 @@ def q_add_field(collection_name, field_name, value=None):
 
 
 if __name__ == '__main__':
+    pass
     # q_remove_field('proxies', 'xxx')
     # q_copy_field('proxies', 'delay', 'xxx')
     # q_add_field('proxies', 'scrape_n_failed_total', 0)
-    backup_database()

@@ -17,14 +17,15 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 from business.twitter_scraper import TweetScraper
-from config import LOGGING_LEVEL
+# from config import LOGGING_LEVEL
+from database.control_facade import SystemCfg,Scraping_cfg
 from database.proxy_facade import get_proxies, save_a_proxy_test
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
 
 set_pandas_display_options()
 
-
+system_cfg=SystemCfg()
 class ProxyScraper:
     """
     Class to scrape proxy servers from different websites and send that data to the the scraping_controller for further handeling.
@@ -111,7 +112,7 @@ class ProxyScraper:
         ts = TweetScraper(username)
         ts.proxy_server = {'ip': ip, 'port': port}
         ts.twint_limit = limit
-        ts.twint_hide_terminal_output = True if LOGGING_LEVEL != 'Debug' else False
+        ts.twint_hide_terminal_output = True if system_cfg.logging_level != 'Debug' else False
 
         try:
             start_time = time.time()

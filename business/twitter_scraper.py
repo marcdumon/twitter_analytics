@@ -17,12 +17,14 @@ import twint.storage.panda
 from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyConnectionError, ClientOSError
 
 # from business.proxy_manager import get_a_proxy_server
-from config import SCRAPE_WITH_PROXY
+# from config import SCRAPE_WITH_PROXY
+from database.control_facade import SystemCfg,Scraping_cfg
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
 
 set_pandas_display_options()
-
+system_cfg=SystemCfg()
+scraping_cfg=Scraping_cfg()
 
 class _TwitterScraper:
     """
