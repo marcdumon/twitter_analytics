@@ -16,8 +16,7 @@ from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
 
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
-# from config import SCRAPE_WITH_PROXY, END_DATE, BEGIN_DATE, SCRAPE_ONLY_MISSING_DATES, TIME_DELTA, SCRAPE_PROFILES, SCRAPE_TWEETS, LOGGING_LEVEL
-from database.control_facade import SystemCfg,Scraping_cfg
+from database.control_facade import SystemCfg, Scraping_cfg
 from database.proxy_facade import get_proxies, set_a_proxy_scrape_success_flag, reset_proxies_scrape_success_flag
 from database.proxy_facade import save_proxies
 from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_profiles, get_a_profile
@@ -29,38 +28,37 @@ from tools.utils import dt2str, str2d
 A collection of functions to control scraping and saving proxy servers, Twitter tweets and profiles
 """
 
-
 # See: https://www.cloudcity.io/blog/2019/02/27/things-i-wish-they-told-me-about-multiprocessing-in-python/
 
 ####################################################################################################################################################################################
 
-system_cfg=SystemCfg()
-scraping_cfg=Scraping_cfg()
+system_cfg = SystemCfg()
+scraping_cfg = Scraping_cfg()
 
-def manualy_check_already_exists(usernames): # Todo: Refactor
+
+
+
+
+
+def manualy_check_already_exists(usernames):  # Todo: Refactor
     new_users_lower = [u.lower() for u in usernames]
-
     for username in new_users_lower.copy():
         user_exist = get_a_profile(username)
         if user_exist:
             logger.error(f'New user exists: {username}')
 
 
-
-
-def scrape_list_users_tweets(processes=1, max_delay=15, resume=False, usernames=None):
+def scrape_new_users_tweets(processes=1, max_delay=15, resume=False, usernames=None):
     usernames_df = pd.DataFrame(usernames, columns=['username'])
     if resume:
         usernames_df = usernames_df[usernames_df['scrape_flag'] != 'END']
         usernames_df = usernames_df[usernames_df['scrape_flag'] != 0]
     logger.info(f'Scraping {len(usernames_df)} users. using {processes} processes/threads and proxies with max_delay {max_delay} sec.')
     proxy_queue = populate_proxy_queue(max_delay=max_delay)
-    usernames_pq = [(username.lower(), proxy_queue) for username in usernames_df['username']]
-    # Todo: What's better, multiprocess or multi threads ?
-    with mp.Pool(processes=processes) as pool:
-    # with mp.pool.ThreadPool(processes=processes) as pool:
-        result = pool.starmap(scrape_manager, usernames_pq)
 
+    usernames_pq = [(username.lower(), proxy_queue) for username in usernames_df['username']]
+    with mp.Pool(processes=processes) as pool:
+        result = pool.starmap(scrape_manager, usernames_pq)
 
 
 def scrape_users_tweets_profile(processes=10, max_delay=15, resume=False):
@@ -73,7 +71,7 @@ def scrape_users_tweets_profile(processes=10, max_delay=15, resume=False):
     usernames_pq = [(username.lower(), proxy_queue) for username in usernames_df['username']]
     # Todo: What's better, multiprocess or multi threads ?
     with mp.Pool(processes=processes) as pool:
-    # with mp.pool.ThreadPool(processes=processes) as pool:
+        # with mp.pool.ThreadPool(processes=processes) as pool:
         result = pool.starmap(scrape_manager, usernames_pq)
 
 
@@ -140,7 +138,7 @@ def scrape_a_user_tweets(username, proxy_queue):
         fail_counter = 0
         success = False
         bd, ed = dt2str(begin_date), dt2str(end_date)
-        while (not success) and (fail_counter < 5):
+        while (not success) and (fail_counter < scraping_cfg.max_n_fails):
             proxy = {}
             if scraping_cfg.use_proxy:
                 # Todo: proxy_queue already created, now descide to use it or not?
@@ -159,6 +157,7 @@ def scrape_a_user_tweets(username, proxy_queue):
                 set_a_proxy_scrape_success_flag(proxy, True)
                 success = True
             # Todo: put exception code in function
+
             except ValueError as e:
                 set_a_scrape_flag(username, 'ValueError')
                 fail_counter += 1
@@ -295,7 +294,7 @@ def _get_periods_without_min_tweets(username, begin_date, end_date, min_tweets=1
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def _split_periods(periods):
     # Split the periods into parts with a maximal length of 'TIME_DELTA' days
-    td=scraping_cfg.time_delta
+    td = scraping_cfg.time_delta
     splitted_periods = []
     for b, e in periods:
         if e - b <= timedelta(days=td):
@@ -312,16 +311,19 @@ def _split_periods(periods):
 
 ####################################################################################################################################################################################
 def scrape_proxies():
+    ps = ProxyScraper()
     logger.info('=' * 100)
     logger.info('Start scrapping Proxies')
     logger.info('=' * 100)
-
-    logger.info(f'Start scraping proxies from free_proxy_list.net')
-    proxies_df = ProxyScraper.scrape_free_proxy_list()
-    save_proxies(proxies_df)
-    logger.info(f'Start scraping proxies from hidemy.name')
-    proxies_df = ProxyScraper.scrape_hide_my_name()
-    save_proxies(proxies_df)
+    if scraping_cfg.proxies_download_sites['free_proxy_list']:
+        logger.info(f'Start scraping proxies from free_proxy_list.net')
+        proxies_df = ps.scrape_free_proxy_list()
+        save_proxies(proxies_df)
+    if scraping_cfg.proxies_download_sites['hide_my_name']:
+        logger.info(f'Start scraping proxies from hidemy.name')
+        proxies_df = ps.scrape_hide_my_name()
+        save_proxies(proxies_df)
+    ps.test_proxies()
 
 
 def reset_proxy_servers():

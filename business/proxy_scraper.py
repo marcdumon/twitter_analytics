@@ -85,7 +85,7 @@ class ProxyScraper:
         driver.close()
         return proxies_df
 
-    def test_proxies(self,only_blacklisted=False, processes=150):
+    def test_proxies(self,only_blacklisted=False, processes=25):
         logger.info('=' * 100)
         logger.info(f"Start testing {'blacklisted' if only_blacklisted else 'all'} proxy servers")
         logger.info('=' * 100)
@@ -139,6 +139,7 @@ class ProxyScraper:
                           'delay': delay,
                           'blacklisted': blacklisted, 'error_code': error_code}
             save_a_proxy_test(proxy_test)
+
 
 
 if __name__ == '__main__':
