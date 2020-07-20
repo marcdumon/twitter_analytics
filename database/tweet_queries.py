@@ -31,7 +31,7 @@ Convention:
 
 IMPLEMENTED QUERIES
 -------------------
-- q_get_nr_tweets_per_day(username, begin_date, end_date)
+- q_get_nr_tweets_per_day(username, session_begin_date, session_end_date)
 - q_save_a_tweet(tweet)
 - q_update_a_tweet(tweet)
 """

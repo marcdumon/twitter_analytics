@@ -6,27 +6,9 @@
 
 from business.scraping_controller import reset_proxy_servers, reset_scrape_flag, scrape_proxies, TwitterScrapingSession
 
-# Todo: use arguments to control parameters
-# from config import SCRAPE_PROFILES, SCRAPE_TWEETS
-from database.config_facade import Scraping_cfg
-#
-# scraping_cfg = Scraping_cfg
-#
-# reset_proxies = True
-# reset_flags = True
-# resume = not reset_flags
-# processes = 30
-# max_delay = 20
-#
-# if reset_proxies:
-#     reset_proxy_servers()
-# if reset_flags:
-#     reset_scrape_flag()
-# if scraping_cfg.proxies:
-#     scrape_proxies()
-# if scraping_cfg.tweets or scraping_cfg.profiles:
-#     scrape_users_tweets_profile(resume=resume, processes=processes, max_delay=max_delay)
-
 scrape = TwitterScrapingSession()
 # _ = start_scraping.users_list(['FRanckentheo', 'xsdsdaads', 'smienos'], only_new=False).start_scraping
+# _ = scrape.profiles.tweets.all_users.start_scraping()
+# _ = scrape.tweets.all_users.start_scraping()
+# _ = scrape.profiles.tweets.rescrape_failed_periods(1).start_scraping()
 _ = scrape.profiles.tweets.all_users.start_scraping()

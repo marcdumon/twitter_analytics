@@ -63,11 +63,11 @@ def update_proxy_stats(flag, proxy):
 
 
 
-def reset_proxies_scrape_success_flag(): # todo: Refactor: Use update_multi iso looping
+def reset_proxies_scrape_success_flag(totals=False): # todo: Refactor: Use update_multi iso looping
     for proxy in q_get_proxies({}):
         print(proxy)
         # proxy = {'ip': proxy['ip'], 'port': proxy['port']}
-        q_reset_proxy_stats(proxy, totals=True)
+        q_reset_proxy_stats(proxy, totals=totals)
 
 
 if __name__ == '__main__':
@@ -75,6 +75,6 @@ if __name__ == '__main__':
     # set_all_proxies()
     # print(get_proxies(blacklisted=False, max_delay=100))
     # print(get_proxies())
-    reset_proxies_scrape_success_flag()
+    reset_proxies_scrape_success_flag(True)
 
 

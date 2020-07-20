@@ -5,27 +5,23 @@
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, timedelta
 
-
 """
 Config: Reads the configuration
 Control: Sets the configuration
 """
-
-
-
-
+# Todo: Rethink architecture config and control
 conf_all = {
     'n_processes': 25,
     # Twitter
     'scrape_profiles': True,  # Todo: obsolete?
     'scrape_tweets': True,  # Todo: obsolete?
-    'scrape_only_missing_dates': False,
     'scrape_with_proxy': True,  # Todo: obsolete?
-    'end_date': datetime.today().date(),
-    'begin_date': (datetime.now() - timedelta(days=20)).date(),
-    'time_delta': 5,
-    'max_fails': 2,
+    'session_end_date': datetime.today().date(),
+    'session_begin_date': (datetime.now() - timedelta(days=20)).date(),
+    'time_delta': 10,
+    'max_fails': 10,
     'max_proxy_delay': 30,
+    'scrape_only_missing_dates': False,
     'min_tweets': 1,
     # Proxies
     'scrape_proxies': True,
@@ -45,6 +41,7 @@ class _Config:
     def __init__(self):
         conf['twint_show_stats'] = True if conf['logging_level'] != 'Debug' else False
         self._config = conf
+
     def get_property(self, property_name):
         if property_name not in self._config.keys():
             return None
@@ -83,12 +80,12 @@ class Scraping_cfg(_Config):
         return selfs.get_property('min_tweets')
 
     @property
-    def begin(self):
-        return self.get_property('begin_date')
+    def session_begin_date(self):
+        return self.get_property('session_begin_date')
 
     @property
-    def end(self):
-        return self.get_property('end_date')
+    def session_end_date(self):
+        return self.get_property('session_end_date')
 
     @property
     def time_delta(self):
@@ -121,7 +118,7 @@ class SystemCfg(_Config):
 
 if __name__ == '__main__':
     s_cfg = Scraping_cfg()
-    x = s_cfg.end
+    x = s_cfg.session_end_date
     print(x)
 
     xx = SystemCfg()

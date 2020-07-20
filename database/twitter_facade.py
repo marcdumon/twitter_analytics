@@ -23,7 +23,7 @@ IMPLEMENTED FUNCTIONS
 - get_join_date(username)
 - get_a_profile(username)
 - get_profiles()
-- get_nr_tweets_per_day(username, begin_date, end_date)
+- get_nr_tweets_per_day(username, session_begin_date, session_end_date)
 - reset_all_scrape_flags()
 - save_a_profile(profiles_df)
 - save_tweets(tweets_df)
@@ -129,8 +129,8 @@ def get_a_profile(username):
 
 
 def get_usernames():
-    profiles_df = get_profiles()
-    usernames_df = profiles_df[['user_id', 'username', 'scrape_flag']]
+    profiles_df = get_profiles() # Todo: refactor: inconsistent nameing for same profiles_df, username_df
+    usernames_df = profiles_df[['user_id', 'username']]
     return usernames_df
 
 
