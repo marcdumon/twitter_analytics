@@ -35,8 +35,9 @@ from pymongo import MongoClient
 from database.config_facade import Scraping_cfg, SystemCfg
 from tools.logger import logger
 
-system_cfg=SystemCfg()
+system_cfg = SystemCfg()
 database = system_cfg.database
+
 
 # Todo: Refactor: put everything in a class. DbManagement.copy_collection().xxx
 
@@ -45,7 +46,6 @@ def get_collection(collection_name):  # Todo: same function in many modules. Put
     db = client[database]
     collection = db[collection_name]
     return collection
-
 
 
 def q_remove_field(collection_name, field_name):
@@ -82,6 +82,6 @@ def q_add_field(collection_name, field_name, value=None):
 
 if __name__ == '__main__':
     pass
-    # q_remove_field('lo', 'ValueError')
+    # q_remove_field('profiles', 'scrape_ok')
     # q_copy_field('proxies', 'delay', 'xxx')
-    q_add_field('logs', 'session_id', 0)
+    # q_add_field('logs', 'session_id', 0)

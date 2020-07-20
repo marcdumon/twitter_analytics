@@ -62,7 +62,7 @@ def q_get_a_profile(username):
 
 def q_get_profiles():
     collection = get_collection()
-    cursor = collection.find()
+    cursor = collection.find().sort([('username', 1)])
     return list(cursor)
 
 
@@ -82,15 +82,13 @@ def q_save_a_profile(profile):
                       'verified': profile['verified'],
                       'background_image': profile['background_image'],
                       'avatar': profile['avatar'],
-                      'scrape_ok': 0
-                      },
+                      'scrape_ok': 0},
              '$push': {'timestamp': datetime.now(),
                        'followers': int(profile['followers']),
                        'following': int(profile['following']),
                        'likes': int(profile['likes']),
                        'tweets': int(profile['tweets']),
-                       'media': int(profile['media']),
-                       }}
+                       'media': int(profile['media']), }}
         try:
             collection.update_one(f, u, upsert=True)
         except DuplicateKeyError as e:
