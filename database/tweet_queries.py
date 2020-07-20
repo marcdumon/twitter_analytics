@@ -9,7 +9,7 @@ from datetime import datetime
 from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 
-from database.control_facade import SystemCfg
+from database.config_facade import SystemCfg
 from tools.logger import logger
 
 """
@@ -87,11 +87,16 @@ def q_update_a_tweet(tweet):
         result = collection.update_one(f, u, upsert=True)
         logger.debug(f"Updated: {result.raw_result} - {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
     except DuplicateKeyError as e:
-        logger.error('*'*3000)
-        logger.error('tweet=')
-        logger.error((tweet))
-        logger.error(e)
-        logger.error('*'*3000)
+        logger.debug(f"Duplicate: {tweet['tweet_id']} - {tweet['date']} - {tweet['name']}")
+
+
+def q_tweets_scraping_log():
+    pass
+
+
+def q_update_profile_scraping_log():
+    pass
+
 
 if __name__ == '__main__':
     # print(collection_name)

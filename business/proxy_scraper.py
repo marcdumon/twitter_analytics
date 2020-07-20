@@ -18,7 +18,7 @@ from selenium.webdriver.firefox.options import Options
 
 from business.twitter_scraper import TweetScraper
 # from config import LOGGING_LEVEL
-from database.control_facade import SystemCfg,Scraping_cfg
+from database.config_facade import SystemCfg,Scraping_cfg
 from database.proxy_facade import get_proxies, save_a_proxy_test
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
@@ -28,7 +28,7 @@ set_pandas_display_options()
 system_cfg=SystemCfg()
 class ProxyScraper:
     """
-    Class to scrape proxy servers from different websites and send that data to the the scraping_controller for further handeling.
+    Class to start_scraping proxy servers from different websites and send that data to the the scraping_controller for further handeling.
     Currenty implemented websites are:
         - https://free-proxy-list.net/
         - https://hidemy.name/en/proxy-list/

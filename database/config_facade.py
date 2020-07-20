@@ -1,41 +1,50 @@
 # --------------------------------------------------------------------------------------------------------
 # 2020/07/18
-# src - control_facade.py
+# src - config_facade.py
 # md
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime, timedelta
+
 
 """
 Config: Reads the configuration
 Control: Sets the configuration
 """
 
+
+
+
 conf_all = {
+    'n_processes': 25,
     # Twitter
-    'scrape_profiles': True,
-    'scrape_tweets': True,
+    'scrape_profiles': True,  # Todo: obsolete?
+    'scrape_tweets': True,  # Todo: obsolete?
     'scrape_only_missing_dates': False,
-    'scrape_with_proxy': True,
-    'end_date': datetime.today(),
-    'begin_date': datetime.now() - timedelta(days=1),
-    'time_delta': 360,
-    'max_n_fails': 10,
+    'scrape_with_proxy': True,  # Todo: obsolete?
+    'end_date': datetime.today().date(),
+    'begin_date': (datetime.now() - timedelta(days=20)).date(),
+    'time_delta': 5,
+    'max_fails': 2,
+    'max_proxy_delay': 30,
+    'min_tweets': 1,
     # Proxies
     'scrape_proxies': True,
     'proxies_download_sites': {'free_proxy_list': False, 'hide_my_name': False},
-    # System
-    'database': 'twitter_database',
-    'logging_level': 'Debug',
-}
 
+    # System
+    'database': 'twitter_database_xxx',
+    'logging_level': 'Info',
+    # 'logging_level': 'Debug',
+
+}
 conf = conf_all
 
 
 class _Config:
 
     def __init__(self):
-        self._config = conf  # set it to conf
-
+        conf['twint_show_stats'] = True if conf['logging_level'] != 'Debug' else False
+        self._config = conf
     def get_property(self, property_name):
         if property_name not in self._config.keys():
             return None
@@ -43,13 +52,16 @@ class _Config:
 
 
 class Scraping_cfg(_Config):
-
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     @property
     def proxies(self):
         return self.get_property('scrape_proxies')
+
     @property
     def proxies_download_sites(self):
         return self.get_property('proxies_download_sites')
+
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     @property
     def profiles(self):
@@ -64,8 +76,11 @@ class Scraping_cfg(_Config):
         return self.get_property('scrape_only_missing_dates')
 
     @property
-    def use_proxy(self):
-        return self.get_property('scrape_with_proxy')
+    def max_proxy_delay(self):
+        return self.get_property('max_proxy_delay')
+
+    def min_tweets(selfs):
+        return selfs.get_property('min_tweets')
 
     @property
     def begin(self):
@@ -80,8 +95,17 @@ class Scraping_cfg(_Config):
         return self.get_property('time_delta')
 
     @property
-    def max_n_fails(self):
-        return self.get_property('max_n_fails')
+    def max_fails(self):
+        return self.get_property('max_fails')
+
+    @property
+    def n_processes(self):
+        return self.get_property('n_processes')
+
+    @property
+    def session_id(self):
+        return self.get_property('session_id')
+    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 class SystemCfg(_Config):

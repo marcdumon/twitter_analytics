@@ -4,11 +4,12 @@
 # md
 # --------------------------------------------------------------------------------------------------------
 from datetime import datetime
+from pprint import pprint
 
 from pymongo import MongoClient, DESCENDING
 from pymongo.errors import DuplicateKeyError
 
-from database.control_facade import SystemCfg
+from database.config_facade import SystemCfg
 from tools.logger import logger
 
 """
@@ -33,8 +34,8 @@ IMPLEMENTED QUERIES
 - q_get_proxies(q)
 - q_save_a_proxy(proxy)
 - q_update_a_proxy_test(proxy_test)
-- q_reset_a_proxy_scrape_success_flag(proxy)
-- q_set_a_proxy_scrape_success_flag(proxy, scrape_success_flag)
+- q_reset_proxy_stats(proxy)
+- q_update_proxy_stats(proxy, flag)
 """
 system_cfg = SystemCfg()
 database = system_cfg.database
@@ -94,32 +95,43 @@ def q_update_a_proxy_test(proxy_test):
     collection.update_one(f, u, upsert=True)
 
 
-def q_set_a_proxy_scrape_success_flag(proxy, scrape_success_flag):
+def q_update_proxy_stats(flag, proxy):
     collection = get_collection()
     f = {'ip': proxy['ip'], 'port': proxy['port']}
-    u = {'$set': {'scrape_success': scrape_success_flag,
-                  'last_update':datetime.now()}}
-    if scrape_success_flag:
-        u['$inc'] = {'scrape_n_used': 1}
-        u['$inc'] = {'scrape_n_used_total': 1}
+    u = {'$set': {'last_flag': flag,
+                  'last_update': datetime.now()}}
+    if flag == 'ok':
+        u['$inc'] = {'scrape_n_used': 1,
+                     'scrape_n_used_total': 1,
+                     f'flag_stats.{flag}': 1}
     else:
-        u['$inc'] = {'scrape_n_used': 1, 'scrape_n_failed': 1}
-        u['$inc'] = {'scrape_n_used_total': 1, 'scrape_n_failed_total': 1}
+        u['$inc'] = {'scrape_n_used': 1,
+                     'scrape_n_used_total': 1,
+                     'scrape_n_failed': 1,
+                     'scrape_n_failed_total': 1,
+                     f'flag_stats.{flag}': 1}
     collection.update_one(f, u, upsert=True)
 
 
-def q_reset_a_proxy_scrape_success_flag(proxy):
+def q_reset_proxy_stats(proxy, totals=False):
     collection = get_collection()
     f = {'ip': proxy['ip'], 'port': proxy['port']}
-    u = {'$set': {'scrape_success': True, 'scrape_n_used': 0, 'scrape_n_failed': 0}}
+    u = {'$set': {'last_flag': '',
+                  'scrape_n_used': 0,
+                  'scrape_n_failed': 0}}
+    if totals: u['$set'].update({'scrape_n_used_total': 0,
+                                 'scrape_n_failed_total': 0,
+                                 'flag_stats': {}})
+
     collection.update_one(f, u, upsert=True)
 
 
 def q_temp():
     collection = get_collection()
-    f= {'delay': 0}
-    u={'$set':{'delay':999999}}
+    f = {'delay': 0}
+    u = {'$set': {'delay': 999999}}
     collection.update_many(f, u, upsert=True)
+
 
 if __name__ == '__main__':
     pass
@@ -130,4 +142,4 @@ if __name__ == '__main__':
     # for proxy in col.find():
     #     col.update_one({'_id':proxy['_id']},
     #                    {'$set': {'test_n_blacklisted': int(proxy['blacklisted']), 'test_n_tested': 1}})
-    q_temp()
+    # q_temp()

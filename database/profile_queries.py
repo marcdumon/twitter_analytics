@@ -9,7 +9,7 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 
-from database.control_facade import SystemCfg
+from database.config_facade import SystemCfg
 from tools.logger import logger
 
 """
@@ -34,7 +34,7 @@ IMPLEMENTED QUERIES
 - q_get_a_profile(username)
 - q_get_profiles()
 - q_save_a_profile(username)
-- q_set_a_scrape_flag(username, flag)
+- q_set_profile_scrape_flag(username, flag)
 
 """
 system_cfg = SystemCfg()
@@ -94,17 +94,14 @@ def q_save_a_profile(profile):
         try:
             collection.update_one(f, u, upsert=True)
         except DuplicateKeyError as e:
-            logger.error('*' * 3000)
-            logger.error('profile=')
-            logger.error((profile))
-            logger.error(e)
-            logger.error('*' * 3000)
+            raise
+
     except:
         logger.error(f'Unknown error: {sys.exc_info()[0]}')
         raise
 
 
-def q_set_a_scrape_flag(username, flag):
+def q_set_profile_scrape_flag(username, flag):  # Todo: Refactor: prefer dict arguments here
     collection = get_collection()
     f = {'username': username}
     u = {'$set': {'scrape_flag': flag}}

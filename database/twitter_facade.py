@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from database.profile_queries import q_get_a_profile, q_save_a_profile, q_get_profiles, q_set_a_scrape_flag
+from database.profile_queries import q_get_a_profile, q_save_a_profile, q_get_profiles, q_set_profile_scrape_flag
 from database.tweet_queries import q_get_nr_tweets_per_day, q_save_a_tweet, q_update_a_tweet
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
@@ -25,9 +25,9 @@ IMPLEMENTED FUNCTIONS
 - get_profiles()
 - get_nr_tweets_per_day(username, begin_date, end_date)
 - reset_all_scrape_flags()
-- save_profiles(profiles_df)
+- save_a_profile(profiles_df)
 - save_tweets(tweets_df)
-- set_a_scrape_flag(username, flag)
+- set_profile_scrape_flag(username, flag)
 """
 
 
@@ -105,19 +105,15 @@ def save_tweets(tweets_df, update=True):
         q_update_a_tweet(row.to_dict()) if update else q_save_a_tweet(row.to_dict())
 
 
-def save_profiles(profiles_df):
-    def _format_profile_df(profile):
-        profile['username'] = profile['username'].lower()
-        profile['join_datetime'] = pd.to_datetime(profile['join_datetime'])  # dd-mm-yyyy h:mm AM -> hh:mm:ss
-        profile['join_date'] = pd.to_datetime(f"{profile['join_date']}").strftime('%Y-%m-%d')  # dd-mm-yyyy -> yyyy-mm-dd
-        profile['join_time'] = pd.to_datetime(f"{profile['join_time']}").strftime('%H:%M:%S')  # h:mm AM -> hh:mm:ss+
-        profile['private'] = bool(profile['private'])
-        profile['verified'] = bool(profile['verified'])
-        return profile
-
+def save_a_profile(profiles_df):
     # Only 1 profile in profile, .copy()  otherwise "A value is trying to be set on a copy of a slice from a DataFrame" errror
     profile = profiles_df.iloc[0].copy()
-    profile = _format_profile_df(profile)
+    profile['username'] = profile['username'].lower()
+    profile['join_datetime'] = pd.to_datetime(profile['join_datetime'])  # dd-mm-yyyy h:mm AM -> hh:mm:ss
+    profile['join_date'] = pd.to_datetime(f"{profile['join_date']}").strftime('%Y-%m-%d')  # dd-mm-yyyy -> yyyy-mm-dd
+    profile['join_time'] = pd.to_datetime(f"{profile['join_time']}").strftime('%H:%M:%S')  # h:mm AM -> hh:mm:ss+
+    profile['private'] = bool(profile['private'])
+    profile['verified'] = bool(profile['verified'])
     q_save_a_profile(profile)
 
 
@@ -126,9 +122,10 @@ def get_profiles():
     profiles_df = pd.DataFrame(profiles)
     return profiles_df
 
+
 def get_a_profile(username):
     doc = q_get_a_profile(username)
-    return doc # Todo: Should return a list or df
+    return doc  # Todo: Should return a list or df
 
 
 def get_usernames():
@@ -155,13 +152,9 @@ def get_nr_tweets_per_day(username, start_date=datetime(2000, 1, 1), end_date=da
     return pd.DataFrame(nr_tweets_per_day)
 
 
-def reset_all_scrape_flags(): # Todo: Refactor: use update_many in query!
+def reset_all_scrape_flags():  # Todo: Refactor: use update_many in query!
     for profile in q_get_profiles():
-        q_set_a_scrape_flag(profile['username'], 0)
-
-
-def set_a_scrape_flag(username, flag):
-    q_set_a_scrape_flag(username, flag)
+        q_set_profile_scrape_flag(profile['username'], 0)
 
 
 if __name__ == '__main__':
@@ -174,6 +167,6 @@ if __name__ == '__main__':
     # print(get_nr_tweets_per_day(u, sd, ed))
     # get_join_date((u))
     reset_all_scrape_flags()
-    # set_a_scrape_flag('smienos', 10)
+    # set_profile_scrape_flag('smienos', 10)
     # get_profiles()
     # print(get_a_profile('filip_bru'))

@@ -6,7 +6,7 @@
 import logging
 import coloredlogs
 
-from database.control_facade import SystemCfg
+from database.config_facade import SystemCfg
 
 system_cfg=SystemCfg()
 
@@ -35,7 +35,7 @@ handler = logging.StreamHandler()
 handler.setLevel(level)
 
 # create formatter
-format = '%(asctime)s: [%(filename)-25s %(funcName)25s:%(lineno)-3s]:  [%(levelname)-7s]: %(message)s'
+format = '%(asctime)s: [%(filename)-22s | %(funcName)22s:%(lineno)-3s]: [%(levelname)-7s]: %(message)s'
 formatter = coloredlogs.ColoredFormatter(format)
 
 # add formatter to console handler

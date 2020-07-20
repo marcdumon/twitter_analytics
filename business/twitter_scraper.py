@@ -18,7 +18,7 @@ from aiohttp import ServerDisconnectedError, ClientHttpProxyError, ClientProxyCo
 
 # from business.proxy_manager import get_a_proxy_server
 # from config import SCRAPE_WITH_PROXY
-from database.control_facade import SystemCfg,Scraping_cfg
+from database.config_facade import SystemCfg,Scraping_cfg
 from tools.logger import logger
 from tools.utils import set_pandas_display_options
 
@@ -28,7 +28,7 @@ scraping_cfg=Scraping_cfg()
 
 class _TwitterScraper:
     """
-    Base class to scrape twitter tweets and profile for a username and send that data to the the scraping_controller for further handeling
+    Base class to start_scraping twitter tweets and profile for a username and send that data to the the scraping_controller for further handeling
     """
     _name = ''
     _twint_command = None  # twint.run.Search for tweets or twint.run.Lookup for profiles
@@ -38,14 +38,14 @@ class _TwitterScraper:
     #       The patch  [See this issue](https://github.com/twintproject/twint/issues/786#issuecomment-639387864) works.
     #       However it automatically sets c.User_id and that causes problems in case of Connection Error. A work around for this bug is to manually set c.User_id to None before scraping.
     twint_debug = False  # Store information in debug logs.
-    twint_hide_terminal_output = False  # Hide termnal output.
+    twint_hide_terminal_output =  True if system_cfg.logging_level != 'Debug' else False  # Hide termnal output.
     twint_limit = 200000  # Number of Tweets to pull (Increments of 20).
     twint_retries = 10  # Number of retries of requests (default: 10).
     twint_show_stats = True  # Set to True to show Tweet stats (replies, retweets, likes) in the terminal output.
     twint_show_count = True  # Count the total number of Tweets fetched.
     twint_show_hashtags = False  # Set to True to show hashtags in the terminal output.
     twint_show_cashtags = False  # Set to True to show cashtags in the terminal output.
-    twint_pandas_clean = True  # Automatically clean Pandas dataframe at every scrape.
+    twint_pandas_clean = True  # Automatically clean Pandas dataframe at every start_scraping.
     twint_geo = False
 
     def __init__(self, username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
