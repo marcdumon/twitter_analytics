@@ -18,17 +18,17 @@ conf_all = {
     'scrape_with_proxy': True,  # Todo: obsolete?
     'session_end_date': datetime.today().date(),
     'session_begin_date': (datetime.now() - timedelta(days=20)).date(),
-    'time_delta': 10,
+    'time_delta': 1,
     'max_fails': 10,
-    'max_proxy_delay': 30,
+    'max_proxy_delay': 8,
     'scrape_only_missing_dates': False,
     'min_tweets': 1,
     # Proxies
     'scrape_proxies': True,
-    'proxies_download_sites': {'free_proxy_list': False, 'hide_my_name': False},
+    'proxies_download_sites': {'free_proxy_list': True, 'hide_my_name': True},
 
     # System
-    'database': 'twitter_database_xxx',
+    'database': 'twitter_database',
     'logging_level': 'Info',
     # 'logging_level': 'Debug',
 

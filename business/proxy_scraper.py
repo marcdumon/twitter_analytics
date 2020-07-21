@@ -138,6 +138,7 @@ class ProxyScraper:
             proxy_test = {'ip': ip, 'port': port,
                           'delay': delay,
                           'blacklisted': blacklisted, 'error_code': error_code}
+            logger.info(f'Error aiohttp Server: {ip}:{port}')
             save_a_proxy_test(proxy_test)
 
 

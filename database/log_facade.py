@@ -49,8 +49,8 @@ def get_failed_periods(session_id):
     failed_periods_logs = q_get_failed_periods_logs(session_id)
     if failed_periods_logs:
         usernames_df = pd.DataFrame(failed_periods_logs)
-        usernames_df['end_date'] = usernames_df['end_date'].dt.date
-        usernames_df['begin_date'] = usernames_df['begin_date'].dt.date
+        usernames_df['session_begin_date'] = usernames_df['session_begin_date'].dt.date
+        usernames_df['session_end_date'] = usernames_df['session_end_date'].dt.date
         return usernames_df
     else:
         return pd.DataFrame()

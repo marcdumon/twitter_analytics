@@ -3,16 +3,19 @@
 # src - scraping_controller.py
 # md
 # --------------------------------------------------------------------------------------------------------
-
+import concurrent
 import multiprocessing as mp
 import sys
 import time
 from concurrent.futures import TimeoutError
+from concurrent.futures._base import CancelledError
 from datetime import datetime, timedelta
 from queue import Empty
+from random import random
 
+import aiohttp
 import pandas as pd
-from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
+from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError, client_exceptions, ClientProxyConnectionError
 
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
@@ -56,7 +59,7 @@ class TwitterScrapingSession:
         self.min_tweets = scraping_cfg.min_tweets
         self.session_id = get_max_sesion_id() + 1
         logger.info(
-            f'Start Twitter Scraping. | n_processes={self.n_processes}, session_id={self.session_id}, '
+            f'Start Twitter Scraping. | will change ={self.n_processes}, session_id={self.session_id}, '
             f'session_begin_date={self.session_begin_date}, session_end_date={self.session_end_date}, timedelta={self.timedelta}, missing_dates={self.missing_dates}')
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,7 +95,7 @@ class TwitterScrapingSession:
         self.scrape_tweets = True
         return self
 
-    def rescrape_failed_periods(self, session_id):
+    def rescrape_failed_periods(self, session_id):  # Todo: Doesn;t work!
         self.rescrape = True
         self.usersnames_df = get_failed_periods(session_id=session_id)
         self.session_id *= -1
@@ -126,7 +129,6 @@ class TwitterScrapingSession:
             self._populate_proxy_queue()
             if self.rescrape:
                 mp_iterable = [(username, begin_date, end_date) for _, (username, begin_date, end_date) in self.usersnames_df.iterrows()]
-
             else:
                 mp_iterable = [(username, scraping_cfg.session_begin_date, scraping_cfg.session_end_date) for username in self.usersnames_df['username']]
             with mp.Pool(processes=processes) as pool:
@@ -136,22 +138,76 @@ class TwitterScrapingSession:
     # PROFILES
     # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    def scrape_a_user_profile(self, username):  # Todo: implement Exception trapping + proxy stats
-        self._check_proxy_queue()
-        proxy = self.proxy_queue.get()
-        profile_scraper = ProfileScraper(username)
-        profile_scraper.proxy_server = proxy
+    def scrape_a_user_profile(self, username):  # Todo:  proxy stats
+        log_scraping_profile(self.session_id, 'begin', 'profile', username)
+        time.sleep(random() * 5)  # Todo: DOESN'T WORKOtherwise other objects in other processes will also start checking proxies populated, filling the queue with the same proxies
+        self._check_proxy_queue()  # Populates the queue every process!!! Add same proxies
+        fail_counter = 0
+        while fail_counter < self.max_fails:
+            proxy = self.proxy_queue.get()
+            profile_scraper = ProfileScraper(username)
+            profile_scraper.proxy_server = proxy
+            logger.info(f'Start scraping profiles | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
+            try:  # Todo: Refactor: make method and use also in scrape_a_user_tweets
+                profile_df = profile_scraper.execute_scraping()
 
-        logger.info(f'Start scraping profile | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}')
-        log_scraping_profile(self.session_id, 'begin', 'profile', username, proxy=proxy)
+            # Todo: When I don't add raise to the get.py / def User(...) / line 197, then fail silently.
+            #       No distinction between existing user with proxy failure and canceled account.
+            #       When I add raise, twint / asyncio show  error traceback in terminal
+            #       ? What happens with proxies when username is canceled? Sometimes TimeoutError or TypeError
 
-        profile_df = profile_scraper.execute_scraping()
-        if not profile_df.empty:
-            logger.info(f'Saving profile | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}')
-            save_a_profile(profile_df)
-
+            # Todo: I removed raise from get.py / def User(...) / line 197. Errors are traped in twint and don't propagate till here!!!
+            # except ValueError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_ValueError', e, username, proxy, fail_counter)
+            # except ServerDisconnectedError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_ServerDisconnectedError', e, username,  proxy, fail_counter)
+            # except ClientOSError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_ClientOSError', e, username, proxy, fail_counter)
+            # except TimeoutError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_TimeoutError', e, username,  proxy, fail_counter)
+            # except ClientHttpProxyError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_ClientHttpProxyError', e, username,  proxy, fail_counter)
+            # except IndexError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_IndexError', e, username,  proxy, fail_counter)
+            # except TypeError as e:
+            #     fail_counter += 1
+            #     self.handle_error('Profile_TypeError', e, username, proxy, fail_counter)
+            # except Empty as e:  # Queue emprt # Todo: Doesn't seems to work here
+            #     logger.error(
+            #         f'Empty Error | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
+            #     self._populate_proxy_queue()
+            except:
+                print('x' * 100)
+                print(sys.exc_info()[0])
+                print(sys.exc_info())
+                print('x' * 100)
+            else:
+                if profile_df.empty:
+                    logger.error(f'Empty profile | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
+                    # log_scraping_profile(self.session_id, 'fail', f'profile--{fail_counter}', username, proxy=proxy)
+                    update_proxy_stats('ProfileScrapingError', proxy)
+                    fail_counter += 1
+                    time.sleep(10)
+                else:
+                    logger.info(f'Saving profile | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
+                    log_scraping_profile(self.session_id, 'ok', 'profile', username, proxy=proxy)
+                    update_proxy_stats('ok', proxy)
+                    save_a_profile(profile_df)
+                    self._release_proxy_server(proxy)
+                    break
+            finally:
+                if fail_counter >= self.max_fails:
+                    txt = f'FAIL | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
+                    logger.error(txt)
+                    log_scraping_profile(self.session_id, 'dead', f'profile--{fail_counter}', username, proxy=proxy)
+                    self._release_proxy_server(proxy)
         log_scraping_profile(self.session_id, 'end', 'profile', username)
-        self._release_proxy_server(proxy)
 
     # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # TWEETS
@@ -165,47 +221,58 @@ class TwitterScrapingSession:
             fail_counter = 0
             while fail_counter < self.max_fails:
                 proxy = self.proxy_queue.get()
-                logger.info(
-                    f'Start scraping tweets | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
                 tweet_scraper = TweetScraper(username, period_begin_date, period_end_date)
                 tweet_scraper.proxy_server = proxy
+                logger.info(
+                    f'Start scraping tweets | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
                 try:
                     tweets_df = tweet_scraper.execute_scraping()
                 except ValueError as e:
                     fail_counter += 1
-                    self.handle_error('ValueError', e, username, period_begin_date, period_end_date, proxy, fail_counter)
+                    self.handle_error('ValueError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
                 except ServerDisconnectedError as e:
                     fail_counter += 1
-                    self.handle_error('ServerDisconnectedError', e, username, period_begin_date, period_end_date, proxy, fail_counter)
+                    self.handle_error('ServerDisconnectedError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
                 except ClientOSError as e:
                     fail_counter += 1
-                    self.handle_error('ClientOSError', e, username, period_begin_date, period_end_date, proxy, fail_counter)
+                    self.handle_error('ClientOSError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
                 except TimeoutError as e:
                     fail_counter += 1
-                    self.handle_error('TimeoutError', e, username, period_begin_date, period_end_date, proxy, fail_counter)
+                    self.handle_error('TimeoutError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
                 except ClientHttpProxyError as e:
                     fail_counter += 1
-                    self.handle_error('ClientHttpProxyError', e, username, period_begin_date, period_end_date, proxy, fail_counter)
+                    self.handle_error('ClientHttpProxyError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
+                except ConnectionRefusedError as e:
+                    fail_counter += 1
+                    self.handle_error('ConnectionRefusedError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
+                except ClientProxyConnectionError as e:
+                    fail_counter += 1
+                    self.handle_error('ClientProxyConnectionError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
+                except CancelledError as e:
+                    fail_counter += 1
+                    self.handle_error('CancelledError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
                 except IndexError as e:
                     fail_counter += 1
-                    self.handle_error('IndexError', e, username, period_begin_date, period_end_date, proxy, fail_counter)
+                    self.handle_error('IndexError', e, username, proxy, fail_counter, period_begin_date, period_end_date)
                 except Empty as e:  # Queue emprt
                     logger.error(
                         f'Empty Error | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}')
                     self._populate_proxy_queue()
                 except:
-                    print('x' * 3000)
+                    print('x' * 100)
                     print(sys.exc_info()[0])
                     print(sys.exc_info())
+                    print('x' * 100)
                 else:
                     logger.info(
                         f'Saving {len(tweets_df)} tweets | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}')
                     if not tweets_df.empty: save_tweets(tweets_df)
                     log_scraping_tweets(self.session_id, 'ok', 'period', username, period_begin_date, end_date=period_end_date, n_tweets=len(tweets_df), proxy=proxy)
                     update_proxy_stats('ok', proxy)
+                    self._release_proxy_server(proxy)
                     break  # the wile-loop
                 finally:
-                    self._release_proxy_server(proxy)
+                    # self._release_proxy_server(proxy)
                     if fail_counter >= self.max_fails:
                         txt = f'FAIL | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
                         logger.error(txt)
@@ -214,7 +281,7 @@ class TwitterScrapingSession:
         # All periods scraped.
         log_scraping_tweets(self.session_id, 'end', 'session', username, self.session_begin_date, self.session_end_date)
 
-    def handle_error(self, flag, e, username, period_begin_date, period_end_date, proxy, fail_counter):
+    def handle_error(self, flag, e, username, proxy, fail_counter, period_begin_date=None, period_end_date=None):
         txt = f'{flag} | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
         logger.warning(txt)
         logger.warning(e)
@@ -288,12 +355,11 @@ class TwitterScrapingSession:
 
     # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    def _populate_proxy_queue(self): # Todo: Trow out every proxy with problems. Reload fast besed on ratio ok/fail
+    def _populate_proxy_queue(self):  # Todo: Trow out every proxy with problems. Reload fast besed on ratio ok/fail
         proxy_df = get_proxies(max_delay=self.max_proxy_delay)
         # Shuffle the proxies otherwise always same order
         proxy_df = proxy_df.sample(frac=1., replace=False)
         for _, proxy in proxy_df.iterrows():
-            # self.proxy_queue.put((proxy['ip'], proxy['port']))
             self.proxy_queue.put({'ip': proxy['ip'], 'port': proxy['port']})
         logger.warning(f'Proxy queue poulates. Contains {self.proxy_queue.qsize()} servers')
 

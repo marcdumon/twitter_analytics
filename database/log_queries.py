@@ -57,9 +57,12 @@ def q_save_log(log):
 
 def q_get_max_sesion_id():
     collection = get_collection()
-    cursor = collection.find({},{'_id':0,'session_id':1}).sort([('session_id', -1),('username',1)]).limit(1)
-    doc=list(cursor)
-    max_session_id=doc[0]['session_id'] if doc else -1
+    cursor = collection.find({}, {'_id': 0, 'session_id': 1}).sort([('session_id', -1), ('username', 1)]).limit(1)
+    doc = list(cursor)
+    if doc:
+        max_session_id = doc[0]['session_id']
+    else:
+        max_session_id = -1
     return max_session_id
 
 
@@ -71,8 +74,8 @@ def q_get_failed_periods_logs(session_id):
          'flag': 'fail'}
     p = {'_id': 0,
          'username': 1,
-         'begin_date': 1,
-         'end_date': 1         }
+         'session_begin_date': 1,
+         'session_end_date': 1}
     cursor = collection.find(f, p).sort([('username', 1), ('start_period', 1)])
     return list(cursor)
 

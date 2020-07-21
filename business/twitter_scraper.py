@@ -26,19 +26,26 @@ set_pandas_display_options()
 system_cfg=SystemCfg()
 scraping_cfg=Scraping_cfg()
 
+
+
+
+
 class _TwitterScraper:
     """
     Base class to start_scraping twitter tweets and profile for a username and send that data to the the scraping_controller for further handeling
     """
+
     _name = ''
     _twint_command = None  # twint.run.Search for tweets or twint.run.Lookup for profiles
-    proxy_server = None  # {'ip':'1.1.1.1', 'port': '123'}
+
     # twint config parameters (see https://github.com/twintproject/twint/wiki/Configuration)
-    # Todo: The version 2.1.20 (installed in `/home/md/Miniconda3/envs/ai/lib/python3.7/site-packages/twint/`) has problems with downloading profiles.
+    # Todo: FORK TWINT AND MODIFY IT!!!
+    #       The version 2.1.20 (installed in `/home/md/Miniconda3/envs/ai/lib/python3.7/site-packages/twint/`) has problems with downloading profiles.
     #       The patch  [See this issue](https://github.com/twintproject/twint/issues/786#issuecomment-639387864) works.
     #       However it automatically sets c.User_id and that causes problems in case of Connection Error. A work around for this bug is to manually set c.User_id to None before scraping.
+    #
     twint_debug = False  # Store information in debug logs.
-    twint_hide_terminal_output =  True if system_cfg.logging_level != 'Debug' else False  # Hide termnal output.
+    twint_hide_terminal_output = True if system_cfg.logging_level != 'Debug' else False  # Hide termnal output.
     twint_limit = 200000  # Number of Tweets to pull (Increments of 20).
     twint_retries = 10  # Number of retries of requests (default: 10).
     twint_show_stats = True  # Set to True to show Tweet stats (replies, retweets, likes) in the terminal output.
@@ -51,12 +58,13 @@ class _TwitterScraper:
     def __init__(self, username, begin_date=datetime(2000, 1, 1), end_date=datetime(2035, 1, 1)):
         self.username = username
         self.begin_date, self.end_date = begin_date, end_date
+        self.proxy_server = None  # {'ip':'1.1.1.1', 'port': '123'}
 
     def execute_scraping(self):
         if not self._twint_command: print('Error. Did you use the base class _TwitterScraper? Try TweetScraper or ProfileScraper instead!')
-        while True:
-            scraped_df = self._scrape_using_twint()
-            return scraped_df
+        # while True: # Todo: why this loop?
+        scraped_df = self._scrape_using_twint()
+        return scraped_df
 
     def _scrape_using_twint(self):
         c = self._make_twint_config()
@@ -82,7 +90,6 @@ class _TwitterScraper:
         c.Hide_output = self.twint_hide_terminal_output
         c.Retries_count = self.twint_retries
         c.Pandas_clean = self.twint_pandas_clean
-        c.Debug = self.twint_debug
         c.Username = self.username
         c.Pandas = True
         c.Since = datetime.strftime(self.begin_date, '%Y-%m-%d')
@@ -106,7 +113,6 @@ class ProfileScraper(_TwitterScraper):
         self._name = 'profile'
         self._twint_command = twint.run.Lookup
         super(ProfileScraper, self).__init__(username)
-        # Todo: Set c.User_id to none ?
 
 
 if __name__ == '__main__':
