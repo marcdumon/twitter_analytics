@@ -93,11 +93,9 @@ def q_save_a_profile(profile):
             collection.update_one(f, u, upsert=True)
         except DuplicateKeyError as e:
             raise
-
     except:
         logger.error(f'Unknown error: {sys.exc_info()[0]}')
         raise
-
 
 def q_set_profile_scrape_flag(username, flag):  # Todo: Refactor: prefer dict arguments here
     collection = get_collection()

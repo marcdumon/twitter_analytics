@@ -82,6 +82,6 @@ def q_add_field(collection_name, field_name, value=None):
 
 if __name__ == '__main__':
     pass
-    # q_remove_field('profiles', 'scrape_ok')
+    q_remove_field('proxies', 'last_update')
     # q_copy_field('proxies', 'delay', 'xxx')
     # q_add_field('logs', 'session_id', 0)

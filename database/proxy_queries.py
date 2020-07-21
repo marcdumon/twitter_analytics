@@ -99,7 +99,7 @@ def q_update_proxy_stats(flag, proxy):
     collection = get_collection()
     f = {'ip': proxy['ip'], 'port': proxy['port']}
     u = {'$set': {'last_flag': flag,
-                  'last_update': datetime.now()}}
+                  'timestamp': datetime.now()}}
     if flag == 'ok':
         u['$inc'] = {'scrape_n_used': 1,
                      'scrape_n_used_total': 1,
@@ -118,7 +118,8 @@ def q_reset_proxy_stats(proxy, totals=False):
     f = {'ip': proxy['ip'], 'port': proxy['port']}
     u = {'$set': {'last_flag': '',
                   'scrape_n_used': 0,
-                  'scrape_n_failed': 0}}
+                  'scrape_n_failed': 0,
+                  'timestamp':datetime.min}}
     if totals: u['$set'].update({'scrape_n_used_total': 0,
                                  'scrape_n_failed_total': 0,
                                  'flag_stats': {}})

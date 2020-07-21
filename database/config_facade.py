@@ -13,22 +13,23 @@ Control: Sets the configuration
 conf_all = {
     'n_processes': 25,
     # Twitter
-    'scrape_profiles': True,  # Todo: obsolete?
-    'scrape_tweets': True,  # Todo: obsolete?
-    'scrape_with_proxy': True,  # Todo: obsolete?
+    # 'scrape_profiles': True,  # Todo: obsolete?
+    # 'scrape_tweets': True,  # Todo: obsolete?
+    # 'scrape_with_proxy': True,  # Todo: obsolete?
     'session_end_date': datetime.today().date(),
     'session_begin_date': (datetime.now() - timedelta(days=20)).date(),
-    'time_delta': 1,
+    'time_delta': 10,
     'max_fails': 10,
     'max_proxy_delay': 8,
     'scrape_only_missing_dates': False,
     'min_tweets': 1,
     # Proxies
-    'scrape_proxies': True,
+    'scrape_proxies': False,
     'proxies_download_sites': {'free_proxy_list': True, 'hide_my_name': True},
 
     # System
     'database': 'twitter_database',
+    'reset_proxies_stat': True,
     'logging_level': 'Info',
     # 'logging_level': 'Debug',
 
@@ -110,6 +111,10 @@ class SystemCfg(_Config):
     @property
     def database(self):
         return self.get_property('database')
+
+    @property
+    def reset_proxies_stat(self):
+        return self.get_property('reset_proxies_stat')
 
     @property
     def logging_level(self):

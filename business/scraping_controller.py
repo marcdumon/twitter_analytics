@@ -20,7 +20,7 @@ from aiohttp import ServerDisconnectedError, ClientOSError, ClientHttpProxyError
 from business.proxy_scraper import ProxyScraper
 from business.twitter_scraper import TweetScraper, ProfileScraper
 from database.config_facade import SystemCfg, Scraping_cfg
-from database.proxy_facade import get_proxies, update_proxy_stats, reset_proxies_scrape_success_flag
+from database.proxy_facade import get_proxies, update_proxy_stats, reset_proxies_stat
 from database.proxy_facade import save_proxies
 from database.twitter_facade import get_join_date, get_nr_tweets_per_day, save_tweets, save_a_profile, get_a_profile
 from database.log_facade import log_scraping_profile, log_scraping_tweets, get_max_sesion_id, get_failed_periods
@@ -58,6 +58,7 @@ class TwitterScrapingSession:
         self.missing_dates = scraping_cfg.missing_dates
         self.min_tweets = scraping_cfg.min_tweets
         self.session_id = get_max_sesion_id() + 1
+        if system_cfg.reset_proxies_stat: reset_proxies_stat()
         logger.info(
             f'Start Twitter Scraping. | will change ={self.n_processes}, session_id={self.session_id}, '
             f'session_begin_date={self.session_begin_date}, session_end_date={self.session_end_date}, timedelta={self.timedelta}, missing_dates={self.missing_dates}')
@@ -108,9 +109,6 @@ class TwitterScrapingSession:
 
     # @property
     def start_scraping(self):
-        # session_begin_date=session_begin_date if session_begin_date else scraping_cfg.session_begin_date
-        # session_end_date = session_end_date if session_end_date else scraping_cfg.session_end_date
-
         if not (self.scrape_profiles or self.scrape_tweets):
             logger.warning(f'Nothing to do. Did you forget "profiles" or "tweets" instruction?')
             return None
@@ -119,9 +117,6 @@ class TwitterScrapingSession:
             return None
         processes = min(len(self.usersnames_df), self.n_processes)
         if self.scrape_profiles:
-            self._populate_proxy_queue()
-            print(self.usersnames_df)
-            # mp_iterable = [(username,) for _, (_, username) in self.usersnames_df.iterrows()]
             mp_iterable = [(username,) for username in self.usersnames_df['username']]
             with mp.Pool(processes=processes) as pool:
                 pool.starmap(self.scrape_a_user_profile, mp_iterable)
@@ -203,7 +198,7 @@ class TwitterScrapingSession:
                     break
             finally:
                 if fail_counter >= self.max_fails:
-                    txt = f'FAIL | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
+                    txt = f'dead | {username}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
                     logger.error(txt)
                     log_scraping_profile(self.session_id, 'dead', f'profile--{fail_counter}', username, proxy=proxy)
                     self._release_proxy_server(proxy)
@@ -274,7 +269,7 @@ class TwitterScrapingSession:
                 finally:
                     # self._release_proxy_server(proxy)
                     if fail_counter >= self.max_fails:
-                        txt = f'FAIL | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
+                        txt = f'dead | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
                         logger.error(txt)
                         log_scraping_tweets(self.session_id, 'fail', 'period', username, period_begin_date, period_end_date, proxy=proxy)
 
@@ -282,7 +277,7 @@ class TwitterScrapingSession:
         log_scraping_tweets(self.session_id, 'end', 'session', username, self.session_begin_date, self.session_end_date)
 
     def handle_error(self, flag, e, username, proxy, fail_counter, period_begin_date=None, period_end_date=None):
-        txt = f'{flag} | {username}, {period_begin_date} | {period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
+        txt = f'{flag} | {username}, {period_begin_date}/{period_end_date}, {proxy["ip"]}:{proxy["port"]}, queue={self.proxy_queue.qsize()}, fail={fail_counter}'
         logger.warning(txt)
         logger.warning(e)
         update_proxy_stats(flag, proxy)
